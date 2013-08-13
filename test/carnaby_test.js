@@ -37,9 +37,14 @@ exports.carnaby = {
   setUp: function(done) {
     done();
   },
-  'header template': function(test) {
+  'default template': function(test) {
     test.expect(1);
-    compare('header', test);
+    compare('default-template.js', test);
+    test.done();
+  },
+  'default init template': function (test) {
+    test.expect(1);
+    compare('default-init-template.js', test);
     test.done();
   }
 };

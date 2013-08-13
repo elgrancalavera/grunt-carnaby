@@ -10,6 +10,8 @@
 
 module.exports = function(grunt) {
 
+  grunt.option('appDir', 'tmp');
+
   // Project configuration.
   grunt.initConfig({
     watch: {
@@ -21,7 +23,7 @@ module.exports = function(grunt) {
     jshint: {
       all: [
         'Gruntfile.js',
-        'tasks/*.js',
+        'tasks/**/*.js',
         '<%= nodeunit.tests %>',
       ],
       options: {
@@ -36,9 +38,6 @@ module.exports = function(grunt) {
 
     // Configuration to be run (and then tested).
     carnaby: {
-      options: {
-        appDir: 'tmp'
-      }
     },
 
     // Unit tests.
@@ -52,8 +51,10 @@ module.exports = function(grunt) {
   grunt.loadTasks('tasks');
 
   // Carnaby
-  grunt.registerTask('c:template',
-    ['carnaby:template:header']);
+  grunt.registerTask('c:template', [
+    'carnaby:default-template.js',
+    'carnaby:init:default-init-template.js'
+  ]);
 
   grunt.registerTask('c', ['c:template']);
 
