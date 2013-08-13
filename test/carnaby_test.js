@@ -2,6 +2,7 @@
 
 var grunt = require('grunt');
 var path = require('path');
+var fs = require('fs');
 
 /*
   ======== A Handy Little Nodeunit Reference ========
@@ -37,14 +38,12 @@ exports.carnaby = {
   setUp: function(done) {
     done();
   },
-  'default template': function(test) {
-    test.expect(1);
-    compare('default-template.js', test);
-    test.done();
-  },
-  'default init template': function (test) {
-    test.expect(1);
-    compare('default-init-template.js', test);
+  'all templates': function(test) {
+    var dir = fs.readdirSync('test/expected');
+    test.expect(dir.length);
+    grunt.util._.each(dir, function (filepath) {
+      compare(filepath, test);
+    });
     test.done();
   }
 };
