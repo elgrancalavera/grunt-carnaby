@@ -36,7 +36,7 @@ module.exports = function(grunt) {
       appDir: grunt.option('appDir') || 'app'
     };
 
-    var template;
+    var templatename;
     var filepath = path.join(options.appDir, grunt.util._.last(this.args));
     var filename = grunt.util._.last(filepath.split('/'));
     var context = grunt.util._.extend(helpers.readPackage(), {
@@ -44,10 +44,10 @@ module.exports = function(grunt) {
     });
 
     if (this.args.length === 2) {
-      template = grunt.util._.first(this.args);
+      templatename = grunt.util._.first(this.args);
     }
 
-    template = helpers.getTemplate(template);
+    var template = helpers.getTemplate(templatename);
     template = before(template);
     template = grunt.template.process(template, { data: context });
 
