@@ -56,7 +56,9 @@ module.exports = function(grunt) {
     'carnaby:default-template.js',
     'carnaby:init:default-init-template.js',
     'carnaby:amd:amd-template.js',
-    'carnaby:init:amd:amd-init-template.js'
+    'carnaby:init:amd:amd-init-template.js',
+    'carnaby:html:default-template.html',
+    'carnaby:init:html:default-init-template.html'
   ]);
 
   grunt.registerTask('c', ['c:template']);

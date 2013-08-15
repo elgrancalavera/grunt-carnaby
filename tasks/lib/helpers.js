@@ -21,6 +21,12 @@ exports.init = function (grunt) {
     'js/footer-amd.js',
     'js/footer.js'];
 
+  templates.html = [
+    'html/header.html',
+    'html/body.html',
+    'html/footer.html'
+  ];
+
   templates.sugar = templates.amd;
 
   var getTemplate = function (name) {
