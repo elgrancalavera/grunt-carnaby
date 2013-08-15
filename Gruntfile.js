@@ -48,6 +48,9 @@ module.exports = function(grunt) {
 
   });
 
+  // load all grunt tasks
+  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
+
   // Actually load this plugin's task(s).
   grunt.loadTasks('tasks');
 
@@ -62,10 +65,6 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('c', ['c:template']);
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-nodeunit');
-  grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.registerTask('test', ['clean', 'c', 'nodeunit']);
 
   grunt.registerTask('default', ['jshint', 'test']);
