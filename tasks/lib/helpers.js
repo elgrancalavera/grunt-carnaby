@@ -1,5 +1,6 @@
 'use strict';
  var path = require('path');
+ var templates = require('./templates');
 
 exports.init = function (grunt) {
 
@@ -7,62 +8,9 @@ exports.init = function (grunt) {
   var txtdir = path.join(filesdir, 'txt');
   var templatesdir = path.join(filesdir, 'templates');
   var exports = {};
-
-  //--------------------------------------------------------------------------
-  //
-  // Template definitions
-  //
-  //--------------------------------------------------------------------------
-
-  var templates = {};
-
-  //----------------------------------
-  //
-  // JS
-  //
-  //----------------------------------
-
-  templates.def = [
-    'js/header.js',
-    'js/footer.js'
-  ];
-
-  templates.amd = [
-    'js/header.js',
-    'js/header-amd.js',
-    'js/footer-amd.js',
-    'js/footer.js'
-  ];
-
-  // Just because I like this alias :)
-  templates.sugar = templates.amd;
-
-  //----------------------------------
-  //
-  // HTML
-  //
-  //----------------------------------
-
-  // A very simple HTML template
-  templates.html = [
-    'html/header.html',
-    'html/styles.html',
-    'html/body.html',
-    'html/scripts.html',
-    'html/footer.html'
-  ];
-
-  // Just like the previous one but assumes an AMD app
-  // will be embedded in the page.
-  templates.index = [
-    'html/header.html',
-    'html/styles.html',
-    'html/styles-index.html',
-    'html/body.html',
-    'html/body-index.html',
-    'html/scripts.html',
-    'html/scripts-index.html',
-    'html/footer.html'
+  // flags (to be removed before doing stuff):
+  var flags = [
+    'force'
   ];
 
   //--------------------------------------------------------------------------
@@ -103,6 +51,31 @@ exports.init = function (grunt) {
       return getTemplate('def');
     }
     return getTemplate(name);
+  };
+
+  exports.checkFile = function (filepath, force) {
+    var exists = grunt.file.exists(filepath);
+    grunt.verbose.writeln((filepath + 'already exists?').cyan, exists.toString().yellow);
+    var existsMsg = '"' + filepath  + '" already exists. ';
+    if (exists && !force) {
+      grunt.fatal(
+        existsMsg +
+        'Aborting.\nAppend ":force" at the end of your task call to overwrite it.'
+      );
+    }
+    if (exists && force) {
+      grunt.log.writeln((existsMsg + 'Overwriting.').yellow);
+    }
+  };
+
+  exports.checkForce = function (tasks, force) {
+    return grunt.util._.map(tasks, function (task) {
+      return force ? task + ':force' : task;
+    });
+  };
+
+  exports.removeFlags = function (args) {
+    return grunt.util._.without.apply(null, [].concat([args], flags));
   };
 
   return exports;

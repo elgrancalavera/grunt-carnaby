@@ -59,11 +59,19 @@ module.exports = function(grunt) {
 
     'c:t:default-template.js',
     'c:t:amd:amd-template.js',
+    'c:t:mainapp:main-app.js',
+    'c:t:app:app.js',
+    'c:t:appcontroller:app-controller.js',
+
     'c:t:index:index.html',
     'c:t:html:html.html',
 
     'c:ti:default-init-template.js',
     'c:ti:amd:amd-init-template.js',
+    'c:ti:mainapp:main-app-init.js',
+    'c:ti:app:app-init.js',
+    'c:ti:appcontroller:app-controller-init.js',
+
     'c:ti:index:index-init.html',
     'c:ti:html:html-init.html'
   ]);

@@ -10,18 +10,6 @@
 
 var path = require('path');
 
-// Running this task without arguments should generate the runtime for a Carnaby
-// application.
-
-// flags (listed in order of precedence):
-// - init: means we don't want to process the templates but use them as part of
-//   the grunt-carnaby-init template. We leave the files as they are and replace
-//   the delimiters to match the grunt-init delimiter style.
-var flags = [
-  'init'
-];
-
-
 // default client configuration
 var clientConfig = function (root, name, description) {
   return {
@@ -47,15 +35,18 @@ module.exports = function(grunt) {
       appDir: grunt.option('appDir') || 'app'
     };
 
+    var args = helpers.removeFlags(this.args);
+
     var templatename;
-    var filepath = path.join(options.appDir, grunt.util._.last(this.args));
+    var filepath = path.join(options.appDir, grunt.util._.last(args));
+    helpers.checkFile(filepath, this.flags.force);
     var filename = grunt.util._.last(filepath.split('/'));
     var context = grunt.util._.extend(helpers.readPackage(), {
       filename: filename
     });
 
-    if (this.args.length === 2) {
-      templatename = grunt.util._.first(this.args);
+    if (args.length === 2) {
+      templatename = grunt.util._.first(args);
     }
 
     var template = helpers.getTemplate(templatename);
@@ -69,33 +60,34 @@ module.exports = function(grunt) {
 
   };
 
-  var writeTemplate = function (template, context) {
-    grunt.log.debug('writeTemplate');
-    grunt.log.debug(template.filepath);
-    grunt.file.write(
-      template.filepath,
-      grunt.template.process(template.template, { data: context }));
-  };
-
   var writeClientConfig = function (name, description, force) {
     var config = clientConfig(grunt.option('appDir'), name, description);
     var dest = path.join('.carnaby', name + '.json');
-    var exists = grunt.file.exists(dest);
     grunt.verbose.writeflags(this, 'Task');
-    grunt.verbose.writeln((dest + 'already exists?').cyan, exists.toString().yellow);
-    var existsMsg = 'The "' + name  + '" client already exists. ';
-    if (exists && !this.flags.force) {
-      grunt.fatal(
-        existsMsg +
-        'Aborting.\nAppend ":force" at the end of you task call to overwrite it.'
-      );
-    }
-    if (exists && this.flags.force) {
-      grunt.log.writeln((existsMsg + 'Overwriting.').yellow);
-    }
+    helpers.checkFile(dest, this.flags.force);
     grunt.verbose.writeflags(config, 'Default client config');
     grunt.file.write(dest, JSON.stringify(config, null, 2));
     grunt.log.writeln('File "' + dest + '" created.');
+    return config;
+  };
+
+  var generateCommon = function () {
+    var common = path.join('common', 'scripts', 'common');
+    return [
+      'c:t:mainapp:' + path.join(common, 'app.js'),
+      'c:t:appcontroller:' + path.join(common, 'controllers', 'app-controller.js')
+    ];
+  };
+
+  var generateClient = function (config) {
+    return [
+      'c:t:app:' + path.join('clients', config.name, 'scripts', 'app.js')
+    ];
+  };
+
+  var run = function (taskList) {
+    taskList = helpers.checkForce(taskList, this.flags.force);
+    grunt.task.run(taskList);
   };
 
   //--------------------------------------------------------------------------
@@ -134,7 +126,12 @@ module.exports = function(grunt) {
    * c:install generates a default carnaby project
    */
   grunt.registerTask('c:install', 'Generates a default carnaby project', function () {
-    writeClientConfig.call(this, 'mobile', 'Default carnaby client.');
+    var config = writeClientConfig.call(this, 'mobile', 'Default carnaby client.');
+    var taskList = [].concat(
+      generateCommon.call(this),
+      generateClient.call(this, config)
+    );
+    run.call(this, taskList);
   });
 
 };
