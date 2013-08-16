@@ -8,7 +8,19 @@ exports.init = function (grunt) {
   var templatesdir = path.join(filesdir, 'templates');
   var exports = {};
 
+  //--------------------------------------------------------------------------
+  //
+  // Template definitions
+  //
+  //--------------------------------------------------------------------------
+
   var templates = {};
+
+  //----------------------------------
+  //
+  // JS
+  //
+  //----------------------------------
 
   templates.def = [
     'js/header.js',
@@ -19,15 +31,45 @@ exports.init = function (grunt) {
     'js/header.js',
     'js/header-amd.js',
     'js/footer-amd.js',
-    'js/footer.js'];
+    'js/footer.js'
+  ];
 
+  // Just because I like this alias :)
+  templates.sugar = templates.amd;
+
+  //----------------------------------
+  //
+  // HTML
+  //
+  //----------------------------------
+
+  // A very simple HTML template
   templates.html = [
     'html/header.html',
+    'html/styles.html',
     'html/body.html',
+    'html/scripts.html',
     'html/footer.html'
   ];
 
-  templates.sugar = templates.amd;
+  // Just like the previous one but assumes an AMD app
+  // will be embedded in the page.
+  templates.index = [
+    'html/header.html',
+    'html/styles.html',
+    'html/styles-index.html',
+    'html/body.html',
+    'html/body-index.html',
+    'html/scripts.html',
+    'html/scripts-index.html',
+    'html/footer.html'
+  ];
+
+  //--------------------------------------------------------------------------
+  //
+  // Helpers
+  //
+  //--------------------------------------------------------------------------
 
   var getTemplate = function (name) {
     var definition = templates[name];
@@ -40,6 +82,12 @@ exports.init = function (grunt) {
     }, '');
     return txt;
   };
+
+  //--------------------------------------------------------------------------
+  //
+  // Exported stuff
+  //
+  //--------------------------------------------------------------------------
 
   exports.usage = function () {
     var usage = grunt.file.read(path.join(txtdir, 'usage.txt'));
