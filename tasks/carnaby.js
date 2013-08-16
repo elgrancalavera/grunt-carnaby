@@ -119,7 +119,8 @@ module.exports = function(grunt) {
    * c:client generates a carnaby client application
    */
   grunt.registerTask('c:client', 'Generates a carnaby client application', function () {
-
+    var config = writeClientConfig.call(this, this.args[0], this.args[1] || '');
+    run.call(this, generateClient.call(this, config));
   });
 
   /*
