@@ -56,14 +56,16 @@ module.exports = function(grunt) {
 
   // Carnaby
   grunt.registerTask('c:template', [
-    'carnaby:default-template.js',
-    'carnaby:init:default-init-template.js',
-    'carnaby:amd:amd-template.js',
-    'carnaby:init:amd:amd-init-template.js',
-    'carnaby:index:index.html',
-    'carnaby:init:index:index-init.html',
-    'carnaby:html:html.html',
-    'carnaby:init:html:html-init.html'
+
+    'c:t:default-template.js',
+    'c:t:amd:amd-template.js',
+    'c:t:index:index.html',
+    'c:t:html:html.html',
+
+    'c:ti:default-init-template.js',
+    'c:ti:amd:amd-init-template.js',
+    'c:ti:index:index-init.html',
+    'c:ti:html:html-init.html'
   ]);
 
   grunt.registerTask('c', ['c:template']);

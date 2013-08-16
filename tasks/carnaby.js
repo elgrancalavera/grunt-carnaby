@@ -21,6 +21,17 @@ var flags = [
   'init'
 ];
 
+
+// default client configuration
+var clientConfig = function (root, name, description) {
+  return {
+    name: name,
+    description: description || '',
+    root: path.join(root, 'clients', name),
+    config: path.join(root, 'clients', name, 'config.json')
+  };
+};
+
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
 
@@ -66,15 +77,64 @@ module.exports = function(grunt) {
       grunt.template.process(template.template, { data: context }));
   };
 
-  grunt.registerTask('carnaby', 'Writes a file using a template.', function() {
+  var writeClientConfig = function (name, description, force) {
+    var config = clientConfig(grunt.option('appDir'), name, description);
+    var dest = path.join('.carnaby', name + '.json');
+    var exists = grunt.file.exists(dest);
+    grunt.verbose.writeflags(this, 'Task');
+    grunt.verbose.writeln((dest + 'already exists?').cyan, exists.toString().yellow);
+    var existsMsg = 'The "' + name  + '" client already exists. ';
+    if (exists && !this.flags.force) {
+      grunt.fatal(
+        existsMsg +
+        'Aborting.\nAppend ":force" at the end of you task call to overwrite it.'
+      );
+    }
+    if (exists && this.flags.force) {
+      grunt.log.writeln((existsMsg + 'Overwriting.').yellow);
+    }
+    grunt.verbose.writeflags(config, 'Default client config');
+    grunt.file.write(dest, JSON.stringify(config, null, 2));
+    grunt.log.writeln('File "' + dest + '" created.');
+  };
+
+  //--------------------------------------------------------------------------
+  //
+  // Tasks
+  //
+  //--------------------------------------------------------------------------
+
+  /*
+   * c:t carnaby template task
+   */
+  grunt.registerTask('c:t', 'Writes a file from a template.', function() {
     processTemplate.call(this);
   });
 
-  grunt.registerTask('carnaby:init', 'Writes a file for grunt-init-carnaby', function () {
+  /*
+   * c:ti carnaby template for grunt-init-carnaby
+   *  ti templates don't replace any template tokens, just change their syntax
+   *  and leaves them in place to be used developing grunt-init-carnaby
+   */
+  grunt.registerTask(
+    'c:ti', 'Writes a file for grunt-init-carnaby from a template', function () {
     processTemplate.call(this, function (template) {
       return template.replace(/<%/g, '{%').replace(/%>/g, '%}');
     });
   });
 
+  /*
+   * c:client generates a carnaby client application
+   */
+  grunt.registerTask('c:client', 'Generates a carnaby client application', function () {
+
+  });
+
+  /*
+   * c:install generates a default carnaby project
+   */
+  grunt.registerTask('c:install', 'Generates a default carnaby project', function () {
+    writeClientConfig.call(this, 'mobile', 'Default carnaby client.');
+  });
 
 };
