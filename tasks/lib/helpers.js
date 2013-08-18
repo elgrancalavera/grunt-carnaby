@@ -81,7 +81,7 @@ exports.init = function (grunt) {
     grunt.verbose.writeln((filepath + 'already exists?').cyan, exists.toString().yellow);
     var existsMsg = '"' + filepath  + '" already exists. ';
     if (exists && !force) {
-      grunt.fatal(existsMsg + overwritemsg);
+      grunt.fatal(existsMsg + abortmsg);
     }
     if (exists && force) {
       grunt.log.writeln((existsMsg + overwritemsg).yellow);
