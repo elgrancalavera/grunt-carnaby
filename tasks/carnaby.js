@@ -80,6 +80,7 @@ module.exports = function(grunt) {
     grunt.log.debug(dest);
 
     grunt.file.write(dest, grunt.template.process(template, { data: context }));
+    grunt.log.ok('File "' + dest + '" written.');
   };
 
   var processMultipleTemplates = function (optionsList) {
@@ -121,7 +122,6 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:template', 'Writes a file from a template.', function() {
     var options = getTemplateOptions(this);
     processTemplate(options);
-    grunt.log.ok();
   });
 
   /*
@@ -135,7 +135,6 @@ module.exports = function(grunt) {
       return template.replace(/<%/g, '{%').replace(/%>/g, '%}');
     };
     processTemplate.call(this, options);
-    grunt.log.ok();
   });
 
   /*
