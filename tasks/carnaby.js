@@ -60,17 +60,6 @@ module.exports = function(grunt) {
 
   };
 
-  var writeClientConfig = function (name, description, force) {
-    var config = clientConfig(grunt.option('appDir'), name, description);
-    var dest = path.join('.carnaby', name + '.json');
-    grunt.verbose.writeflags(this, 'Task');
-    helpers.checkFile(dest, this.flags.force);
-    grunt.verbose.writeflags(config, 'Default client config');
-    grunt.file.write(dest, JSON.stringify(config, null, 2));
-    grunt.log.writeln('File "' + dest + '" created.');
-    return config;
-  };
-
   var generateCommon = function () {
     var common = path.join('common', 'scripts', 'common');
     return [
@@ -79,9 +68,9 @@ module.exports = function(grunt) {
     ];
   };
 
-  var generateClient = function (config) {
+  var generateClient = function (client) {
     return [
-      'c:t:app:' + path.join('clients', config.name, 'scripts', 'app.js')
+      'c:t:app:' + path.join('clients', client.name, 'scripts', 'app.js')
     ];
   };
 
@@ -119,18 +108,30 @@ module.exports = function(grunt) {
    * c:client generates a carnaby client application
    */
   grunt.registerTask('c:client', 'Generates a carnaby client application', function () {
-    var config = writeClientConfig.call(this, this.args[0], this.args[1] || '');
-    run.call(this, generateClient.call(this, config));
+    var name = this.args[0];
+    var desc = this.args[1];
+    var client = helpers.createClient(name, desc, this.flags.force).readClient(name);
+    grunt.verbose.writeflags(client, 'Client');
+    run.call(this, generateClient.call(this, client));
   });
 
   /*
-   * c:install generates a default carnaby project
+   * carnaby: if a .carnaby/projec.json file exists, installs the project from the
+   *  file definition. If there is not a project file, generates de default
+   *  carnaby project.
    */
-  grunt.registerTask('c:install', 'Generates a default carnaby project', function () {
-    var config = writeClientConfig.call(this, 'mobile', 'Default carnaby client.');
+  grunt.registerTask('c:install', 'carnaby project generation and installation', function () {
+    var force = this.flags.force;
+    var project = helpers
+      .createProject(force)
+      .createDefaultClient(force)
+      .readProject();
+    var client = helpers.readDefaultClient();
+    grunt.verbose.writeflags(project, 'Project');
+    grunt.verbose.writeflags(client, 'Client');
     var taskList = [].concat(
       generateCommon.call(this),
-      generateClient.call(this, config)
+      generateClient.call(this, client)
     );
     run.call(this, taskList);
   });
