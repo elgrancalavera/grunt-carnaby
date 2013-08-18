@@ -47,6 +47,34 @@ module.exports = function(grunt) {
     return makeTemplateOptionsList(clientTemplates, basepath, options);
   };
 
+  var makeClientTasks = function (client) {
+    // Copy template files task
+    // common/scripts/templates
+    // app/{client.name}/scripts/templates
+    // to...
+    // .carnaby/mount/{client.name}/scripts/templates
+  };
+
+  var makeClientSymlinks = function (client) {
+    // from app/common/scripts/common
+    // to .carnaby/mount/{client.name}/scripts/common
+  };
+
+  var makeClientMain = function (client) {
+    // extending {}
+    // with app/commom/scripts/common/config.json
+    // with app/{client.name}/config.json
+    // to .carnaby/mount/{client.name}/config.json
+  };
+
+  // this needs to be a grun task that iterates over the clients and writes
+  // the main file for each one of them.
+  var writeClientMain = function (client) {
+    // readJSON .carnaby/mount/{client.name}/config.json
+    // use as context
+    // grunt carnaby:template:main:.carnaby/mount/{client.name}/scripts/main.js
+  };
+
   var processTemplate = function (options) {
 
     grunt.log.debug('Processing template');
@@ -145,7 +173,14 @@ module.exports = function(grunt) {
     var desc = this.args[1];
     var client = helpers.createClient(name, desc, this.flags.force).readClient(name);
     grunt.verbose.writeflags(client, 'Client');
-    grunt.log.ok();
+    var options = {
+      force: this.flags.force,
+      client: client,
+      context: {
+      }
+    };
+    processMultipleTemplates(makeClient(options));
+    makeClientTasks(client);
   });
 
   /*
@@ -161,21 +196,17 @@ module.exports = function(grunt) {
     var client = helpers.readDefaultClient();
     grunt.verbose.writeflags(project, 'Project');
     grunt.verbose.writeflags(client, 'Client');
-
     var options = {
       force: force,
       client: client,
       context: {
       }
     };
-
     var templatesToProcess = [].concat(
       makeCommon(options),
       makeClient(options)
     );
-
     processMultipleTemplates(templatesToProcess);
-    grunt.log.ok();
+    makeClientTasks(client);
   });
-
 };

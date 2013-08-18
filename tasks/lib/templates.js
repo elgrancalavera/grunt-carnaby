@@ -78,9 +78,9 @@ exports.appcontroller = [
   'js/footer.js'
 ];
 
-exports.requirejs = [
+exports.main = [
   'js/header.js',
-  'js/require.js',
+  'js/main.js',
   'js/footer.js'
 ];
 
