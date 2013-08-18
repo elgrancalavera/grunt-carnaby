@@ -1,0 +1,33 @@
+{
+    "paths": {
+        "jquery": "../bower_components/jquery/jquery",
+        "backbone": "../bower_components/backbone/backbone",
+        "underscore": "../bower_components/underscore/underscore",
+        "backbone.marionette": "../bower_components/backbone.marionette/lib/backbone.marionette",
+        "handlebars": "common/helpers/handlebars-loader"
+    },
+    "shim": {
+        "underscore": {
+            "exports": "_"
+        },
+        "backbone.marionette": {
+            "deps": [
+                "underscore",
+                "jquery",
+                "backbone"
+            ],
+            "exports": "Marionette"
+        },
+        "backbone": {
+            "deps": [
+                "underscore",
+                "jquery"
+            ],
+            "exports": "Backbone"
+        }
+    },
+    "config": {
+        "core/app-controller": {
+        }
+    }
+}

@@ -8,6 +8,20 @@
 
 //----------------------------------
 //
+// JSON
+//
+//----------------------------------
+
+exports.requirebase = [
+  'json/require-base.json'
+];
+
+exports.requireconf = [
+  'json/require-client.json'
+];
+
+//----------------------------------
+//
 // JS
 //
 //----------------------------------
@@ -49,6 +63,12 @@ exports.appcontroller = [
   'js/header-amd.js',
   'js/app-controller.js',
   'js/footer-amd.js',
+  'js/footer.js'
+];
+
+exports.requirejs = [
+  'js/header.js',
+  'js/require.js',
   'js/footer.js'
 ];
 

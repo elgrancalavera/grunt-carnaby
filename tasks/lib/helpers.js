@@ -63,8 +63,9 @@ exports.init = function (grunt) {
   //
   //--------------------------------------------------------------------------
 
-  exports.usage = function () {
+  exports.usage = function (fatal) {
     grunt.log.writeln(readTxt('usage.txt').cyan);
+    grunt.fatal('Unable to contine.');
   };
 
   var readPackage = exports.readPackage = function () {
@@ -78,7 +79,7 @@ exports.init = function (grunt) {
   var checkFile = exports.checkFile = function (filepath, force) {
     var exists = grunt.file.exists(filepath);
     grunt.verbose.writeln((filepath + 'already exists?').cyan, exists.toString().yellow);
-    var existsMsg = '"' + filepath  + '" already exists.';
+    var existsMsg = '"' + filepath  + '" already exists. ';
     if (exists && !force) {
       grunt.fatal(existsMsg + overwritemsg);
     }
@@ -141,6 +142,8 @@ exports.init = function (grunt) {
   exports.readDefaultClient = function () {
     return readClient(defaultclient);
   };
+
+  exports.defaultclient = defaultclient;
 
   return exports;
 };

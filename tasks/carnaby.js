@@ -1,82 +1,101 @@
 /*
  * carnaby
- * https://github.com/leon.coto/grunt-carnaby
+ * https://github.com/elgrancalavera/grunt-carnaby
  *
  * Copyright (c) 2013 M&C Saatchi
  * Licensed under the MIT license.
  */
 
 'use strict';
-
 var path = require('path');
-
-// default client configuration
-var clientConfig = function (root, name, description) {
-  return {
-    name: name,
-    description: description || '',
-    root: path.join(root, 'clients', name),
-    config: path.join(root, 'clients', name, 'config.json')
-  };
-};
 
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
 
-  var processTemplate = function (before) {
-    grunt.verbose.writeflags(this, 'this');
+  // [template, destination] destination relative to base path (added later)
 
-    if (!this.args.length) {
-      return helpers.usage();
-    }
+  var commonTemplates = [
+    ['mainapp', 'scripts/common/app.js'],
+    ['appcontroller', 'scripts/common/controllers/app-controller.js'],
+    ['requirebase', 'config.json']
+  ];
 
-    before = before || grunt.util._.identity;
-    var options = {
-      appDir: grunt.option('appDir') || 'app'
-    };
+  var clientTemplates = [
+    ['app', 'scripts/app.js'],
+    ['requireconf', 'config.json']
+  ];
 
-    var args = helpers.removeFlags(this.args);
-
-    var templatename;
-    var filepath = path.join(options.appDir, grunt.util._.last(args));
-    helpers.checkFile(filepath, this.flags.force);
-    var filename = grunt.util._.last(filepath.split('/'));
-    var context = grunt.util._.extend(helpers.readPackage(), {
-      filename: filename
+  var makeTemplateOptionsList = function (templatelist, basepath, options) {
+    return grunt.util._.map(templatelist, function (args) {
+      return grunt.util._.extend({
+        template: args[0],
+        filepath: path.join(basepath, args[1])
+      }, options);
     });
+  };
 
-    if (args.length === 2) {
-      templatename = grunt.util._.first(args);
-    }
+  var makeCommon = function (options) {
+    var basepath = 'common';
+    options = grunt.util._.extend({}, options);
+    return makeTemplateOptionsList(commonTemplates, basepath, options);
+  };
 
-    var template = helpers.getTemplate(templatename);
-    template = before(template);
-    template = grunt.template.process(template, { data: context });
+  var makeClient = function (options) {
+    var basepath = options.client.name;
+    options = grunt.util._.extend({}, options);
+    return makeTemplateOptionsList(clientTemplates, basepath, options);
+  };
+
+  var processTemplate = function (options) {
+
+    grunt.log.debug('Processing template');
+    grunt.log.debug(options.template);
+    grunt.log.debug(options.filepath);
+
+    var before = options.before || grunt.util._.identity;
+    var appDir = grunt.option('appDir') || 'app';
+    var filepath = path.join(appDir, options.filepath);
+    helpers.checkFile(filepath, options.force);
+
+    var filename = path.basename(filepath);
+    var template = before(helpers.getTemplate(options.template));
+    var context = grunt.util._.extend(helpers.readPackage(), options.context || {}, {
+      filename: filename,
+      // path relative to app
+      filepath: options.filepath
+    });
 
     grunt.verbose.writeflags(options, 'Options');
     grunt.log.debug(template);
     grunt.log.debug(filepath);
-    grunt.file.write(filepath, template);
-
+    grunt.file.write(filepath, grunt.template.process(template, { data: context }));
   };
 
-  var generateCommon = function () {
-    var common = path.join('common', 'scripts', 'common');
-    return [
-      'c:t:mainapp:' + path.join(common, 'app.js'),
-      'c:t:appcontroller:' + path.join(common, 'controllers', 'app-controller.js')
-    ];
+  var processMultipleTemplates = function (optionsList) {
+    grunt.util._.each(optionsList, function (options) {
+      processTemplate(options);
+    });
   };
 
-  var generateClient = function (client) {
-    return [
-      'c:t:app:' + path.join('clients', client.name, 'scripts', 'app.js')
-    ];
+  var basepath = function () {
+    var pathcomponents = [grunt.option('appDir') || 'app'];
+    pathcomponents = pathcomponents.concat(grunt.util.toArray(arguments));
+    return path.join.apply(null, pathcomponents);
   };
 
-  var run = function (taskList) {
-    taskList = helpers.checkForce(taskList, this.flags.force);
-    grunt.task.run(taskList);
+  var getTemplateOptions = function (task) {
+    grunt.verbose.writeflags(task, 'Getting template options from');
+    var args = helpers.removeFlags(task.args);
+    if (args.length !== 2) {
+      return helpers.usage(true);
+    }
+    var options = {
+      filepath: path.normalize(grunt.util._.last(args)),
+      template: grunt.util._.first(args),
+      force: task.flags.force
+    };
+    grunt.verbose.writeflags(options, 'Template options');
+    return options;
   };
 
   //--------------------------------------------------------------------------
@@ -86,42 +105,46 @@ module.exports = function(grunt) {
   //--------------------------------------------------------------------------
 
   /*
-   * c:t carnaby template task
+   * carnaby:template carnaby template task
    */
-  grunt.registerTask('c:t', 'Writes a file from a template.', function() {
-    processTemplate.call(this);
+  grunt.registerTask('carnaby:template', 'Writes a file from a template.', function() {
+    var options = getTemplateOptions(this);
+    processTemplate(options);
+    grunt.log.ok();
   });
 
   /*
-   * c:ti carnaby template for grunt-init-carnaby
+   * carnaby:init-template carnaby template for grunt-init-carnaby
    *  ti templates don't replace any template tokens, just change their syntax
    *  and leaves them in place to be used developing grunt-init-carnaby
    */
-  grunt.registerTask(
-    'c:ti', 'Writes a file for grunt-init-carnaby from a template', function () {
-    processTemplate.call(this, function (template) {
+  grunt.registerTask('carnaby:init-template', 'Writes a file for grunt-init-carnaby from a template', function () {
+    var options = getTemplateOptions(this);
+    options.before = function (template) {
       return template.replace(/<%/g, '{%').replace(/%>/g, '%}');
-    });
+    };
+    processTemplate.call(this, options);
+    grunt.log.ok();
   });
 
   /*
-   * c:client generates a carnaby client application
+   * carnaby:client generates a carnaby client application
    */
-  grunt.registerTask('c:client', 'Generates a carnaby client application', function () {
+  grunt.registerTask('carnaby:client', 'Generates a carnaby client application', function () {
     var name = this.args[0];
     var desc = this.args[1];
     var client = helpers.createClient(name, desc, this.flags.force).readClient(name);
     grunt.verbose.writeflags(client, 'Client');
-    run.call(this, generateClient.call(this, client));
+    // run.call(this, generateClient.call(this, client));
+    grunt.log.ok();
   });
 
   /*
-   * carnaby: if a .carnaby/projec.json file exists, installs the project from the
-   *  file definition. If there is not a project file, generates de default
-   *  carnaby project.
+   * carnaby:install:
    */
-  grunt.registerTask('c:install', 'carnaby project generation and installation', function () {
+  grunt.registerTask('carnaby', 'carnaby project generation and installation', function () {
     var force = this.flags.force;
+    var clientname = helpers.defaultclient;
     var project = helpers
       .createProject(force)
       .createDefaultClient(force)
@@ -129,11 +152,21 @@ module.exports = function(grunt) {
     var client = helpers.readDefaultClient();
     grunt.verbose.writeflags(project, 'Project');
     grunt.verbose.writeflags(client, 'Client');
-    var taskList = [].concat(
-      generateCommon.call(this),
-      generateClient.call(this, client)
+
+    var options = {
+      force: force,
+      client: client,
+      context: {
+      }
+    };
+
+    var templatesToProcess = [].concat(
+      makeCommon(options),
+      makeClient(options)
     );
-    run.call(this, taskList);
+
+    processMultipleTemplates(templatesToProcess);
+    grunt.log.ok();
   });
 
 };

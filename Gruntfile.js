@@ -55,29 +55,26 @@ module.exports = function(grunt) {
   grunt.loadTasks('tasks');
 
   // Carnaby
-  grunt.registerTask('c:template', [
+  grunt.registerTask('carnaby:templates', [
 
-    'c:t:default-template.js',
-    'c:t:amd:amd-template.js',
-    'c:t:mainapp:main-app.js',
-    'c:t:app:app.js',
-    'c:t:appcontroller:app-controller.js',
+    'carnaby:template:amd:amd-template.js',
+    'carnaby:template:mainapp:main-app.js',
+    'carnaby:template:app:app.js',
+    'carnaby:template:appcontroller:app-controller.js',
 
-    'c:t:index:index.html',
-    'c:t:html:html.html',
+    'carnaby:template:index:index.html',
+    'carnaby:template:html:html.html',
 
-    'c:ti:default-init-template.js',
-    'c:ti:amd:amd-init-template.js',
-    'c:ti:mainapp:main-app-init.js',
-    'c:ti:app:app-init.js',
-    'c:ti:appcontroller:app-controller-init.js',
+    'carnaby:init-template:amd:amd-init-template.js',
+    'carnaby:init-template:mainapp:main-app-init.js',
+    'carnaby:init-template:app:app-init.js',
+    'carnaby:init-template:appcontroller:app-controller-init.js',
 
-    'c:ti:index:index-init.html',
-    'c:ti:html:html-init.html'
+    'carnaby:init-template:index:index-init.html',
+    'carnaby:init-template:html:html-init.html'
   ]);
 
-  grunt.registerTask('c', ['c:template']);
-  grunt.registerTask('test', ['clean', 'c', 'nodeunit']);
+  grunt.registerTask('test', ['clean', 'carnaby:templates', 'nodeunit']);
 
   grunt.registerTask('default', ['jshint', 'test']);
   grunt.registerTask('code', ['default', 'watch']);
