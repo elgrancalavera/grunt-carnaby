@@ -22,6 +22,18 @@ exports.requireconf = [
 
 //----------------------------------
 //
+// Handlebars
+//
+//----------------------------------
+
+exports.hbs = [
+  'hbs/header.hbs',
+  'hbs/body.hbs',
+  'hbs/footer.hbs'
+];
+
+//----------------------------------
+//
 // JS
 //
 //----------------------------------
@@ -69,6 +81,14 @@ exports.appcontroller = [
 exports.requirejs = [
   'js/header.js',
   'js/require.js',
+  'js/footer.js'
+];
+
+exports.itemview = [
+  'js/header.js',
+  'js/header-amd.js',
+  'js/item-view.js',
+  'js/footer-amd.js',
   'js/footer.js'
 ];
 

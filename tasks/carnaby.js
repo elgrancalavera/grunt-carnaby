@@ -22,7 +22,8 @@ module.exports = function(grunt) {
 
   var clientTemplates = [
     ['app', 'scripts/app.js'],
-    ['requireconf', 'config.json']
+    ['requireconf', 'config.json'],
+    ['index', 'index.html']
   ];
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
@@ -54,21 +55,31 @@ module.exports = function(grunt) {
 
     var before = options.before || grunt.util._.identity;
     var appDir = grunt.option('appDir') || 'app';
-    var filepath = path.join(appDir, options.filepath);
-    helpers.checkFile(filepath, options.force);
+    var dest = path.join(appDir, options.filepath);
+    helpers.checkFile(dest, options.force);
 
-    var filename = path.basename(filepath);
+    var extname = path.extname(options.filepath);
+    var filename = path.basename(options.filepath);
+    var filenamenoext = path.basename(options.filepath, extname);
+    var dirname = path.dirname(options.filepath);
+    var filepathnoext = path.join(dirname, filenamenoext);
     var template = before(helpers.getTemplate(options.template));
+
     var context = grunt.util._.extend(helpers.readPackage(), options.context || {}, {
       filename: filename,
-      // path relative to app
-      filepath: options.filepath
+      extname: extname,
+      dirname: dirname,
+      filepath: options.filepath,
+      filenamenoext: filenamenoext,
+      filepathnoext: filepathnoext
     });
 
     grunt.verbose.writeflags(options, 'Options');
+    grunt.verbose.writeflags(context, 'Context');
     grunt.log.debug(template);
-    grunt.log.debug(filepath);
-    grunt.file.write(filepath, grunt.template.process(template, { data: context }));
+    grunt.log.debug(dest);
+
+    grunt.file.write(dest, grunt.template.process(template, { data: context }));
   };
 
   var processMultipleTemplates = function (optionsList) {
@@ -135,12 +146,11 @@ module.exports = function(grunt) {
     var desc = this.args[1];
     var client = helpers.createClient(name, desc, this.flags.force).readClient(name);
     grunt.verbose.writeflags(client, 'Client');
-    // run.call(this, generateClient.call(this, client));
     grunt.log.ok();
   });
 
   /*
-   * carnaby:install:
+   * carnaby
    */
   grunt.registerTask('carnaby', 'carnaby project generation and installation', function () {
     var force = this.flags.force;
