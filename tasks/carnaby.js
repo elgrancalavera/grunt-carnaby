@@ -8,6 +8,7 @@
  */
 'use strict';
 var path = require('path');
+var fs = require('fs');
 
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
@@ -168,14 +169,17 @@ module.exports = function(grunt) {
     //----------------------------------
 
     grunt.config('copy', project.tasks.copy);
+    grunt.config('handlebars.options', hbsOptions());
     grunt.config('handlebars.' + client.name, project.tasks.handlebars[client.name]);
     grunt.config('extend', project.tasks.extend);
 
-    grunt.task.run('copy');
-    grunt.task.run('handlebars');
-    grunt.task.run('extend');
-    grunt.task.run('carnaby:mainjs:local');
-
+    grunt.task.run(
+      'copy',
+      'handlebars',
+      'extend',
+      'carnaby:mainjs:local',
+      'carnaby:symlinks'
+    );
   };
 
   var makeClientSymlinks = function (client) {
@@ -247,6 +251,20 @@ module.exports = function(grunt) {
   //--------------------------------------------------------------------------
 
   /*
+   * carnaby:symlinks creates symlinks for common code in each client
+   */
+  grunt.registerTask('carnaby:symlinks', 'Creates symlinks for common code in each client', function () {
+    var clients = helpers.readProject().clients;
+    grunt.util._.each(clients, function (client, name) {
+      var src = path.resolve(helpers.appDir, 'common/scripts/common');
+      var dst = path.resolve('.carnaby/tmp', client.name, 'scripts/common');
+      grunt.log.debug(src);
+      grunt.log.debug(dst);
+      fs.symlink(src, dst);
+    });
+  });
+
+  /*
    * carnaby:mainjs writes a main.js file
    */
   grunt.registerTask('carnaby:mainjs', 'Writes a main.js file for RequireJS', function () {
@@ -255,7 +273,7 @@ module.exports = function(grunt) {
     if (!grunt.util._.contains(targets, target)) {
       grunt.fatal('Unknown build target:"' + target + '". Aborting');
     }
-    var source = path.join('config/', target, '.json');
+    var source = path.join('config/', target + '.json');
     var clients = helpers.readProject().clients;
 
     grunt.util._.each(clients, function (client, name) {
@@ -312,8 +330,5 @@ module.exports = function(grunt) {
     var force = this.flags.force;
     makeCommon(force);
     makeClient(helpers.defaultclientname, 'Carnaby\'s default mobile client.', force);
-
-    // wire any task with special needs
-    grunt.config('handlebars.options', hbsOptions());
   });
 };
