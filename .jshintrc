@@ -9,5 +9,11 @@
   "undef": true,
   "boss": true,
   "eqnull": true,
-  "node": true
+  "node": true,
+  "indent": 2,
+  "predef": [
+      "define",
+      "require",
+      "requirejs"
+  ]
 }

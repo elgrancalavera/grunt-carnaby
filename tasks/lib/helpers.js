@@ -1,6 +1,6 @@
 'use strict';
- var path = require('path');
- var templates = require('./templates');
+var path = require('path');
+var templates = require('./templates');
 
 exports.init = function (grunt) {
 

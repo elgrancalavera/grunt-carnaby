@@ -15,30 +15,32 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     watch: {
-      all: {
-        files: '<%= jshint.all %>',
-        tasks: ['jshint']
+      dev: {
+        files: '<%= jshint.dev %>',
+        tasks: ['jshint:dev']
       }
     },
     jshint: {
-      all: [
-        'Gruntfile.js',
-        'tasks/**/*.js',
-        '<%= nodeunit.tests %>',
-        '!**/files/**/*'
-      ],
       options: {
         jshintrc: '.jshintrc',
       },
+      dev: [
+        'Gruntfile.js',
+        'tasks/**/*.js',
+        '<%= nodeunit.tests %>',
+        '!tasks/files/**/*'
+      ],
+      artifacts: [
+        'tmp/**/*.{js,json}'
+      ]
     },
 
     // Before generating any new files, remove any previously-created files.
-    clean: {
-      tests: ['tmp', '.carnaby'],
-    },
+    clean: ['tmp', '.carnaby'],
 
     // Configuration to be run (and then tested).
     carnaby: {
+      foo: 'bar'
     },
 
     // Unit tests.
@@ -74,9 +76,15 @@ module.exports = function(grunt) {
     'carnaby:init-template:html:html-init.html'
   ]);
 
-  grunt.registerTask('test', ['clean', 'carnaby:templates', 'nodeunit']);
+  grunt.registerTask('default', [
+    'clean',
+    'jshint:dev',
+    'carnaby',
+    // 'carnaby:templates',
+    'jshint:artifacts',
+    'nodeunit'
+  ]);
 
-  grunt.registerTask('default', ['jshint', 'test']);
-  grunt.registerTask('code', ['default', 'watch']);
+  grunt.registerTask('code', ['jshint:dev', 'watch']);
 
 };

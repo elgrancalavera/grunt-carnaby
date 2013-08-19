@@ -187,6 +187,7 @@ module.exports = function(grunt) {
    * carnaby
    */
   grunt.registerTask('carnaby', 'carnaby project generation and installation', function () {
+    grunt.verbose.writeflags(this, 'carnaby');
     var force = this.flags.force;
     var clientname = helpers.defaultclient;
     var project = helpers

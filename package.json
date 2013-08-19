@@ -34,7 +34,8 @@
     "grunt-contrib-nodeunit": "~0.2.0",
     "grunt": "~0.4.1",
     "grunt-contrib-watch": "~0.5.1",
-    "matchdep": "~0.1.2"
+    "matchdep": "~0.1.2",
+    "jshint": "~2.1.10"
   },
   "peerDependencies": {
     "grunt": "~0.4.1"
