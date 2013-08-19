@@ -19,20 +19,20 @@ module.exports = function(grunt) {
     ['mainapp', 'scripts/common/app.js'],
     ['appcontroller', 'scripts/common/controllers/app-controller.js'],
     ['requirebase', 'config/base.json'],
-    ['requireconf', 'config/dev.json'],
-    ['requireconf', 'config/qa.json'],
-    ['requireconf', 'config/prod.json'],
-    ['requireconf', 'config/local.json'],
+    ['requireconfdev', 'config/dev.json'],
+    ['requireconfqa', 'config/qa.json'],
+    ['requireconfprod', 'config/prod.json'],
+    ['requireconflocal', 'config/local.json'],
     ['hbs', 'templates/main-view.hbs']
   ];
 
   var clientTemplates = [
     ['app', 'scripts/app.js'],
     ['requireconf', 'config/base.json'],
-    ['requireconf', 'config/dev.json'],
-    ['requireconf', 'config/qa.json'],
-    ['requireconf', 'config/prod.json'],
-    ['requireconf', 'config/local.json'],
+    ['requireconfdev', 'config/dev.json'],
+    ['requireconfqa', 'config/qa.json'],
+    ['requireconfprod', 'config/prod.json'],
+    ['requireconflocal', 'config/local.json'],
     ['index', 'index.html'],
     ['hbs', 'templates/client-main-view.hbs']
   ];
@@ -114,11 +114,6 @@ module.exports = function(grunt) {
     //
     //----------------------------------
 
-    // local
-    // dev
-    // qa
-    // prod
-
     files = {};
     helpers.ensureTask(project, 'extend');
     dest = path.join('.carnaby/tmp', client.name, 'config');
@@ -166,36 +161,26 @@ module.exports = function(grunt) {
 
     helpers.saveProject(project);
 
-    // temp
+    //----------------------------------
+    //
+    // Temp
+    //
+    //----------------------------------
+
     grunt.config('copy', project.tasks.copy);
-    grunt.config('handlebars.options', hbsOptions());
     grunt.config('handlebars.' + client.name, project.tasks.handlebars[client.name]);
     grunt.config('extend', project.tasks.extend);
 
     grunt.task.run('copy');
     grunt.task.run('handlebars');
     grunt.task.run('extend');
+    grunt.task.run('carnaby:mainjs:local');
 
   };
 
   var makeClientSymlinks = function (client) {
     // from app/common/scripts/common
     // to .carnaby/mount/{client.name}/scripts/common
-  };
-
-  var makeClientMain = function (client) {
-    // extending {}
-    // with app/commom/scripts/common/config.json
-    // with app/{client.name}/config.json
-    // to .carnaby/mount/{client.name}/config.json
-  };
-
-  // this needs to be a grun task that iterates over the clients and writes
-  // the main file for each one of them.
-  var writeClientMain = function (client) {
-    // readJSON .carnaby/mount/{client.name}/config.json
-    // use as context
-    // grunt carnaby:template:main:.carnaby/mount/{client.name}/scripts/main.js
   };
 
   var processTemplate = function (options) {
@@ -205,8 +190,8 @@ module.exports = function(grunt) {
     grunt.log.debug(options.filepath);
 
     var before = options.before || grunt.util._.identity;
-    var appDir = helpers.appDir;
-    var dest = path.join(appDir, options.filepath);
+    var base = options.base || helpers.appDir;
+    var dest = path.join(base, options.filepath);
     helpers.checkFile(dest, options.force);
 
     var extname = path.extname(options.filepath);
@@ -240,12 +225,6 @@ module.exports = function(grunt) {
     });
   };
 
-  var basepath = function () {
-    var pathcomponents = [helpers.appDir];
-    pathcomponents = pathcomponents.concat(grunt.util.toArray(arguments));
-    return path.join.apply(null, pathcomponents);
-  };
-
   var getTemplateOptions = function (task) {
     grunt.verbose.writeflags(task, 'Getting template options from');
     var args = helpers.removeFlags(task.args);
@@ -266,6 +245,34 @@ module.exports = function(grunt) {
   // Tasks
   //
   //--------------------------------------------------------------------------
+
+  /*
+   * carnaby:mainjs writes a main.js file
+   */
+  grunt.registerTask('carnaby:mainjs', 'Writes a main.js file for RequireJS', function () {
+    var targets = ['local', 'dev', 'qa', 'prod'];
+    var target = this.args[0];
+    if (!grunt.util._.contains(targets, target)) {
+      grunt.fatal('Unknown build target:"' + target + '". Aborting');
+    }
+    var source = path.join('config/', target, '.json');
+    var clients = helpers.readProject().clients;
+
+    grunt.util._.each(clients, function (client, name) {
+      var config = grunt.file.read(path.join('.carnaby/tmp', name, source));
+      var context = {
+        config: config
+      };
+      processTemplate({
+        filepath: path.join(name, 'scripts/main.js'),
+        template: 'main',
+        force: true,
+        context: context,
+        base: target === 'local' ? '.carnaby/tmp' : 'dist'
+      });
+    });
+
+  });
 
   /*
    * carnaby:template carnaby template task
@@ -305,5 +312,8 @@ module.exports = function(grunt) {
     var force = this.flags.force;
     makeCommon(force);
     makeClient(helpers.defaultclientname, 'Carnaby\'s default mobile client.', force);
+
+    // wire any task with special needs
+    grunt.config('handlebars.options', hbsOptions());
   });
 };

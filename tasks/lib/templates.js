@@ -28,6 +28,22 @@ exports.requireconf = [
   'json/require-client.json'
 ];
 
+exports.requireconflocal = [
+  'json/require-client-local.json'
+];
+
+exports.requireconfdev = [
+  'json/require-client-dev.json'
+];
+
+exports.requireconfqa = [
+  'json/require-client-qa.json'
+];
+
+exports.requireconfprod = [
+  'json/require-client-prod.json'
+];
+
 //----------------------------------
 //
 // Handlebars

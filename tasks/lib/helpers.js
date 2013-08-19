@@ -130,7 +130,7 @@ exports.init = function (grunt) {
     project.clients[name] = {
       name: name,
       description: description || '',
-      root: path.join(appDir, 'clients', name)
+      root: path.join(appDir, name)
     };
     project = saveProject(project);
     return exports;

@@ -38,7 +38,7 @@ module.exports = function(grunt) {
     },
 
     // Before generating any new files, remove any previously-created files.
-    clean: ['tmp', '.carnaby'],
+    clean: ['tmp', '.carnaby', 'dist'],
 
     // Configuration to be run (and then tested).
     carnaby: {
@@ -82,6 +82,7 @@ module.exports = function(grunt) {
     'clean',
     'jshint:dev',
     'carnaby',
+    'carnaby:client:desktop',
     'carnaby:templates',
     'jshint:artifacts',
     'nodeunit'
