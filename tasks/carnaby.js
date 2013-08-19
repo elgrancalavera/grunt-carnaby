@@ -82,7 +82,7 @@ module.exports = function(grunt) {
     grunt.log.debug(options.filepath);
 
     var before = options.before || grunt.util._.identity;
-    var appDir = grunt.option('appDir') || 'app';
+    var appDir = helpers.appDir;
     var dest = path.join(appDir, options.filepath);
     helpers.checkFile(dest, options.force);
 
@@ -118,7 +118,7 @@ module.exports = function(grunt) {
   };
 
   var basepath = function () {
-    var pathcomponents = [grunt.option('appDir') || 'app'];
+    var pathcomponents = [helpers.appDir];
     pathcomponents = pathcomponents.concat(grunt.util.toArray(arguments));
     return path.join.apply(null, pathcomponents);
   };
@@ -187,7 +187,6 @@ module.exports = function(grunt) {
    * carnaby
    */
   grunt.registerTask('carnaby', 'carnaby project generation and installation', function () {
-    grunt.verbose.writeflags(this, 'carnaby');
     var force = this.flags.force;
     var clientname = helpers.defaultclient;
     var project = helpers

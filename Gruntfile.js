@@ -10,8 +10,6 @@
 
 module.exports = function(grunt) {
 
-  grunt.option('appDir', 'tmp');
-
   // Project configuration.
   grunt.initConfig({
     watch: {
@@ -40,7 +38,7 @@ module.exports = function(grunt) {
 
     // Configuration to be run (and then tested).
     carnaby: {
-      foo: 'bar'
+      appDir: 'tmp'
     },
 
     // Unit tests.
@@ -80,7 +78,7 @@ module.exports = function(grunt) {
     'clean',
     'jshint:dev',
     'carnaby',
-    // 'carnaby:templates',
+    'carnaby:templates',
     'jshint:artifacts',
     'nodeunit'
   ]);

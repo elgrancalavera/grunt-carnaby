@@ -4,6 +4,8 @@ var templates = require('./templates');
 
 exports.init = function (grunt) {
 
+  var config = grunt.config('carnaby');
+  var appDir = config.appDir || 'app';
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclient = 'mobile';
@@ -116,11 +118,11 @@ exports.init = function (grunt) {
     if (project.clients[name] && !force) {
       grunt.fatal('The "' + name + '" client already exists.' + abortmsg);
     }
-    var root = grunt.option('appDir');
+
     project.clients[name] = {
       name: name,
       description: description || '',
-      root: path.join(root, 'clients', name)
+      root: path.join(appDir, 'clients', name)
     };
     project = updateProject(project);
     return exports;
@@ -144,6 +146,7 @@ exports.init = function (grunt) {
   };
 
   exports.defaultclient = defaultclient;
+  exports.appDir = appDir;
 
   return exports;
 };
