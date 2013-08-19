@@ -1,17 +1,24 @@
 /*
  * grunt-carnaby
+ * ./Gruntfile.js
  * https://github.com/leon.coto/grunt-carnaby
  *
  * Copyright (c) 2013 M&C Saatchi
  * Licensed under the MIT license.
  */
-
 'use strict';
 
 module.exports = function(grunt) {
 
   // Project configuration.
+
+  var carnabyTaks = {};
+  if (grunt.file.exists('.carnaby/project')) {
+    carnabyTaks = grunt.file.readJSON('.carnaby/project');
+  }
+
   grunt.initConfig({
+    copy: {},
     watch: {
       dev: {
         files: '<%= jshint.dev %>',

@@ -1,3 +1,11 @@
+/*
+ * carnaby
+ * tasks/lib/helpers.js
+ * https://github.com/elgrancalavera/grunt-carnaby
+ *
+ * Copyright (c) 2013 M&C Saatchi
+ * Licensed under the MIT license.
+ */
 'use strict';
 var path = require('path');
 var templates = require('./templates');
@@ -5,10 +13,10 @@ var templates = require('./templates');
 exports.init = function (grunt) {
 
   var config = grunt.config('carnaby');
-  var appDir = config.appDir || 'app';
+  var appDir = grunt.config('carnaby.appDir');
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
-  var defaultclient = 'mobile';
+  var defaultclientname = 'mobile';
   var exports = {};
   // flags (to be removed before doing stuff):
   var flags = [
@@ -53,7 +61,7 @@ exports.init = function (grunt) {
     }, '');
   };
 
-  var updateProject = function (project) {
+  var saveProject = exports.saveProject = function (project) {
     project = JSON.stringify(project, null, 2);
     grunt.file.write(projectfile, project);
     return readProject();
@@ -124,12 +132,8 @@ exports.init = function (grunt) {
       description: description || '',
       root: path.join(appDir, 'clients', name)
     };
-    project = updateProject(project);
+    project = saveProject(project);
     return exports;
-  };
-
-  exports.createDefaultClient = function (force) {
-    return createClient(defaultclient, null, force);
   };
 
   var readClient = exports.readClient = function (name) {
@@ -142,10 +146,10 @@ exports.init = function (grunt) {
   };
 
   exports.readDefaultClient = function () {
-    return readClient(defaultclient);
+    return readClient(defaultclientname);
   };
 
-  exports.defaultclient = defaultclient;
+  exports.defaultclientname = defaultclientname;
   exports.appDir = appDir;
 
   return exports;

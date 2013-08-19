@@ -1,3 +1,11 @@
+/*
+ * carnaby
+ * tasks/lib/templates.js
+ * https://github.com/elgrancalavera/grunt-carnaby
+ *
+ * Copyright (c) 2013 M&C Saatchi
+ * Licensed under the MIT license.
+ */
 'use strict';
 
 //--------------------------------------------------------------------------

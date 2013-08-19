@@ -1,11 +1,11 @@
 /*
  * carnaby
+ * tasks/carnaby.js
  * https://github.com/elgrancalavera/grunt-carnaby
  *
  * Copyright (c) 2013 M&C Saatchi
  * Licensed under the MIT license.
  */
-
 'use strict';
 var path = require('path');
 
@@ -17,13 +17,15 @@ module.exports = function(grunt) {
   var commonTemplates = [
     ['mainapp', 'scripts/common/app.js'],
     ['appcontroller', 'scripts/common/controllers/app-controller.js'],
-    ['requirebase', 'config.json']
+    ['requirebase', 'config.json'],
+    ['hbs', 'templates/main-view.hbs']
   ];
 
   var clientTemplates = [
     ['app', 'scripts/app.js'],
     ['requireconf', 'config.json'],
-    ['index', 'index.html']
+    ['index', 'index.html'],
+    ['hbs', 'templates/client-main-view.hbs']
   ];
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
@@ -35,24 +37,55 @@ module.exports = function(grunt) {
     });
   };
 
-  var makeCommon = function (options) {
-    var basepath = 'common';
-    options = grunt.util._.extend({}, options);
-    return makeTemplateOptionsList(commonTemplates, basepath, options);
+  var makeCommon = function (force) {
+    var project = helpers.createProject(force).readProject();
+    var options = {
+      force: force
+    };
+    var templates = makeTemplateOptionsList(commonTemplates, 'common', options);
+    processMultipleTemplates(templates);
   };
 
-  var makeClient = function (options) {
-    var basepath = options.client.name;
-    options = grunt.util._.extend({}, options);
-    return makeTemplateOptionsList(clientTemplates, basepath, options);
+  var makeClient = function (name, description, force) {
+    var client = helpers.createClient(name, description, force).readClient(name);
+    var options = {
+      force: force,
+      client: client,
+      context: {
+      }
+    };
+    var templates = makeTemplateOptionsList(clientTemplates, name, options);
+    processMultipleTemplates(templates);
+    makeClientTasks(client);
   };
 
   var makeClientTasks = function (client) {
-    // Copy template files task
-    // common/scripts/templates
-    // app/{client.name}/scripts/templates
-    // to...
-    // .carnaby/mount/{client.name}/scripts/templates
+    var project = helpers.readProject();
+
+    //----------------------------------
+    //
+    // copy:templates
+    //
+    //----------------------------------
+    project.tasks.copy = project.tasks.copy || {};
+    var templatesdest = path.join('.carnaby/tmp', client.name, 'templates');
+    var copyTask = project.tasks.copy[client.name + '_templates'] = {
+      files: [{
+        expand: true,
+        cwd: '<%= carnaby.appDir %>/common/templates',
+        src: ['**'],
+        dest: templatesdest
+      }, {
+        expand: true,
+        cwd: path.join('<%= carnaby.appDir %>', client.name, 'templates'),
+        src: ['**'],
+        dest: templatesdest
+      }]
+    };
+
+    grunt.config('copy.' + client.name + '_templates', copyTask);
+    grunt.task.run('copy');
+    helpers.saveProject(project);
   };
 
   var makeClientSymlinks = function (client) {
@@ -171,16 +204,8 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:client', 'Generates a carnaby client application', function () {
     var name = this.args[0];
     var desc = this.args[1];
-    var client = helpers.createClient(name, desc, this.flags.force).readClient(name);
-    grunt.verbose.writeflags(client, 'Client');
-    var options = {
-      force: this.flags.force,
-      client: client,
-      context: {
-      }
-    };
-    processMultipleTemplates(makeClient(options));
-    makeClientTasks(client);
+    var force = this.flags.force;
+    makeClient(name, desc, force);
   });
 
   /*
@@ -188,25 +213,7 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby', 'carnaby project generation and installation', function () {
     var force = this.flags.force;
-    var clientname = helpers.defaultclient;
-    var project = helpers
-      .createProject(force)
-      .createDefaultClient(force)
-      .readProject();
-    var client = helpers.readDefaultClient();
-    grunt.verbose.writeflags(project, 'Project');
-    grunt.verbose.writeflags(client, 'Client');
-    var options = {
-      force: force,
-      client: client,
-      context: {
-      }
-    };
-    var templatesToProcess = [].concat(
-      makeCommon(options),
-      makeClient(options)
-    );
-    processMultipleTemplates(templatesToProcess);
-    makeClientTasks(client);
+    makeCommon(force);
+    makeClient(helpers.defaultclientname, 'Carnaby\'s default mobile client.', force);
   });
 };
