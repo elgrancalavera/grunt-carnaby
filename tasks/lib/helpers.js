@@ -149,6 +149,17 @@ exports.init = function (grunt) {
     return readClient(defaultclientname);
   };
 
+  // exports.getTaskObject = function (project, taskname) {
+  //   var tasks = project.tasks;
+  //   return tasks[taskname] ? tasks[taskname] : (tasks[taskname] = {});
+  // };
+
+  exports.ensureTask = function (project, taskname) {
+    if (!project.tasks[taskname]) {
+      project.tasks[taskname] = {};
+    }
+  };
+
   exports.defaultclientname = defaultclientname;
   exports.appDir = appDir;
 

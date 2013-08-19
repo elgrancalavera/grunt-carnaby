@@ -11,19 +11,28 @@ var path = require('path');
 
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
+  var hbsOptions = require('./lib/handlebars-options').init(grunt);
 
   // [template, destination] destination relative to base path (added later)
 
   var commonTemplates = [
     ['mainapp', 'scripts/common/app.js'],
     ['appcontroller', 'scripts/common/controllers/app-controller.js'],
-    ['requirebase', 'config.json'],
+    ['requirebase', 'config/base.json'],
+    ['requireconf', 'config/dev.json'],
+    ['requireconf', 'config/qa.json'],
+    ['requireconf', 'config/prod.json'],
+    ['requireconf', 'config/local.json'],
     ['hbs', 'templates/main-view.hbs']
   ];
 
   var clientTemplates = [
     ['app', 'scripts/app.js'],
-    ['requireconf', 'config.json'],
+    ['requireconf', 'config/base.json'],
+    ['requireconf', 'config/dev.json'],
+    ['requireconf', 'config/qa.json'],
+    ['requireconf', 'config/prod.json'],
+    ['requireconf', 'config/local.json'],
     ['index', 'index.html'],
     ['hbs', 'templates/client-main-view.hbs']
   ];
@@ -61,31 +70,112 @@ module.exports = function(grunt) {
 
   var makeClientTasks = function (client) {
     var project = helpers.readProject();
+    var dest, files;
 
     //----------------------------------
     //
     // copy:templates
     //
     //----------------------------------
-    project.tasks.copy = project.tasks.copy || {};
-    var templatesdest = path.join('.carnaby/tmp', client.name, 'templates');
-    var copyTask = project.tasks.copy[client.name + '_templates'] = {
+
+    dest = path.join('.carnaby/tmp', client.name, 'templates');
+    helpers.ensureTask(project, 'copy');
+    project.tasks.copy[client.name + '_templates'] = {
       files: [{
         expand: true,
         cwd: '<%= carnaby.appDir %>/common/templates',
         src: ['**'],
-        dest: templatesdest
+        dest: dest
       }, {
         expand: true,
         cwd: path.join('<%= carnaby.appDir %>', client.name, 'templates'),
         src: ['**'],
-        dest: templatesdest
+        dest: dest
       }]
     };
 
-    grunt.config('copy.' + client.name + '_templates', copyTask);
-    grunt.task.run('copy');
+    //----------------------------------
+    //
+    // handlebars
+    //
+    //----------------------------------
+
+    dest = path.join('.carnaby/tmp', client.name, 'scripts/templates.js');
+    files = {};
+    files[dest] = [path.join('.carnaby/tmp', client.name, 'templates/**/*.hbs')];
+    helpers.ensureTask(project, 'handlebars');
+    project.tasks.handlebars[client.name] = {
+      files: files
+    };
+
+    //----------------------------------
+    //
+    // extend:config
+    //
+    //----------------------------------
+
+    // local
+    // dev
+    // qa
+    // prod
+
+    files = {};
+    helpers.ensureTask(project, 'extend');
+    dest = path.join('.carnaby/tmp', client.name, 'config');
+
+    files[path.join(dest, 'local.json')] = [
+      '<%= carnaby.appDir %>/common/config/base.json',
+      '<%= carnaby.appDir %>/common/config/local.json',
+      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
+      path.join('<%= carnaby.appDir %>', client.name, 'config/local.json')
+    ];
+
+    files[path.join(dest, 'dev.json')] = [
+      '<%= carnaby.appDir %>/common/config/base.json',
+      '<%= carnaby.appDir %>/common/config/dev.json',
+      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
+      path.join('<%= carnaby.appDir %>', client.name, 'config/dev.json')
+    ];
+
+    files[path.join(dest, 'qa.json')] = [
+      '<%= carnaby.appDir %>/common/config/base.json',
+      '<%= carnaby.appDir %>/common/config/qa.json',
+      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
+      path.join('<%= carnaby.appDir %>', client.name, 'config/qa.json')
+    ];
+
+    files[path.join(dest, 'prod.json')] = [
+      '<%= carnaby.appDir %>/common/config/base.json',
+      '<%= carnaby.appDir %>/common/config/prod.json',
+      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
+      path.join('<%= carnaby.appDir %>', client.name, 'config/prod.json')
+    ];
+
+    project.tasks.extend[client.name] = {
+      options: {
+        deep: true
+      },
+      files: files
+    };
+
+    //----------------------------------
+    //
+    // Save and forget
+    //
+    //----------------------------------
+
     helpers.saveProject(project);
+
+    // temp
+    grunt.config('copy', project.tasks.copy);
+    grunt.config('handlebars.options', hbsOptions());
+    grunt.config('handlebars.' + client.name, project.tasks.handlebars[client.name]);
+    grunt.config('extend', project.tasks.extend);
+
+    grunt.task.run('copy');
+    grunt.task.run('handlebars');
+    grunt.task.run('extend');
+
   };
 
   var makeClientSymlinks = function (client) {

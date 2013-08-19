@@ -36,7 +36,9 @@
     "grunt-contrib-watch": "~0.5.1",
     "matchdep": "~0.1.2",
     "jshint": "~2.1.10",
-    "grunt-contrib-copy": "~0.4.1"
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-handlebars": "~0.5.10",
+    "grunt-extend": "~0.4.1"
   },
   "peerDependencies": {
     "grunt": "~0.4.1"

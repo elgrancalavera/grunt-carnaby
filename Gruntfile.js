@@ -12,13 +12,10 @@ module.exports = function(grunt) {
 
   // Project configuration.
 
-  var carnabyTaks = {};
-  if (grunt.file.exists('.carnaby/project')) {
-    carnabyTaks = grunt.file.readJSON('.carnaby/project');
-  }
-
   grunt.initConfig({
     copy: {},
+    handlebars: {},
+    extend: {},
     watch: {
       dev: {
         files: '<%= jshint.dev %>',
