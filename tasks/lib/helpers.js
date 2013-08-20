@@ -13,7 +13,8 @@ var templates = require('./templates');
 exports.init = function (grunt) {
 
   var config = grunt.config('carnaby');
-  var appDir = grunt.config('carnaby.appDir');
+  var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
+
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';

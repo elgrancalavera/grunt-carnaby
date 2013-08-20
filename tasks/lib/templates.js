@@ -125,7 +125,6 @@ exports.itemview = [
 // A very simple HTML template
 exports.html = [
   'html/header.html',
-  'html/styles.html',
   'html/body.html',
   'html/scripts.html',
   'html/footer.html'
@@ -135,7 +134,6 @@ exports.html = [
 // will be embedded in the page.
 exports.index = [
   'html/header.html',
-  'html/styles.html',
   'html/styles-index.html',
   'html/body.html',
   'html/body-index.html',

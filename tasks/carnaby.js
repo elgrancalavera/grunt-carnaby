@@ -182,11 +182,6 @@ module.exports = function(grunt) {
     );
   };
 
-  var makeClientSymlinks = function (client) {
-    // from app/common/scripts/common
-    // to .carnaby/mount/{client.name}/scripts/common
-  };
-
   var processTemplate = function (options) {
 
     grunt.log.debug('Processing template');
@@ -195,6 +190,7 @@ module.exports = function(grunt) {
 
     var before = options.before || grunt.util._.identity;
     var base = options.base || helpers.appDir;
+    grunt.log.debug(base);
     var dest = path.join(base, options.filepath);
     helpers.checkFile(dest, options.force);
 
