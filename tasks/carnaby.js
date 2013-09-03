@@ -71,7 +71,7 @@ module.exports = function(grunt) {
 
   var makeClientTasks = function (client) {
     var project = helpers.readProject();
-    var dest, files;
+    var dest, files, base;
 
     //----------------------------------
     //
@@ -156,30 +156,31 @@ module.exports = function(grunt) {
 
     //----------------------------------
     //
-    // Save and forget
+    // compass
+    //
+    //----------------------------------
+    var srcbase = path.join('<% carnaby.appDir %>/', client.name);
+    var dstbase = path.join('.carnaby/tmp', client.name);
+    helpers.ensureTask(project, 'compass');
+    project.tasks.compass[client.name] = {
+      sassDir: path.join(srcbase, 'styles'),
+      cssDir: path.join(dstbase, 'styles'),
+      imagesDir: path.join(srcbase, 'images'),
+      fontsDir: path.join(srcbase, 'styles/fonts'),
+      javascriptsDir: path.join(srcbase, 'scripts'),
+      importPath: '',
+      realtiveAssets: true
+    };
+
+    //----------------------------------
+    //
+    // Save and update
     //
     //----------------------------------
 
     helpers.saveProject(project);
+    grunt.task.run('carnaby:update');
 
-    //----------------------------------
-    //
-    // Temp
-    //
-    //----------------------------------
-
-    grunt.config('copy', project.tasks.copy);
-    grunt.config('handlebars.options', hbsOptions());
-    grunt.config('handlebars.' + client.name, project.tasks.handlebars[client.name]);
-    grunt.config('extend', project.tasks.extend);
-
-    grunt.task.run(
-      'copy',
-      'handlebars',
-      'extend',
-      'carnaby:mainjs:local',
-      'carnaby:symlinks'
-    );
   };
 
   var processTemplate = function (options) {
@@ -258,6 +259,26 @@ module.exports = function(grunt) {
       grunt.log.debug(dst);
       fs.symlink(src, dst);
     });
+  });
+
+  /*
+   * carnaby:update updates the main grunt config file
+   */
+  grunt.registerTask('carnaby:update', 'updates the main grunt config file', function () {
+    var project = helpers.readProject();
+    grunt.config('copy', project.tasks.copy);
+    grunt.config('handlebars', project.tasks.handlebars);
+    grunt.config('handlebars.options', hbsOptions());
+    grunt.config('extend', project.tasks.extend);
+    grunt.config('compass', project.tasks.compass);
+    grunt.task.run(
+      'copy',
+      'handlebars',
+      'extend',
+      'compass',
+      'carnaby:mainjs:local',
+      'carnaby:symlinks'
+    );
   });
 
   /*
