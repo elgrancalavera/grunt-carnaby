@@ -18,6 +18,7 @@ exports.init = function (grunt) {
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
+  var defaultclientdesc = 'Another Carnaby client';
   var exports = {};
   // flags (to be removed before doing stuff):
   var flags = [
@@ -138,22 +139,16 @@ exports.init = function (grunt) {
   };
 
   var readClient = exports.readClient = function (name) {
-    var client = readProject().clients[name];
+    name = name || defaultclientname;
+    var clients = readProject().clients;
+    var client = clients[name];
+    grunt.verbose.writeflags(clients, 'known clients');
     if (!client) {
-      var msg = 'Unable to read unknown client "' + name + '".';
-      grunt.fatal(msg);
+      grunt.fatal('Unknown client "' + name + '". Aborting.' );
     }
+    grunt.verbose.writeflags(client, name);
     return client;
   };
-
-  exports.readDefaultClient = function () {
-    return readClient(defaultclientname);
-  };
-
-  // exports.getTaskObject = function (project, taskname) {
-  //   var tasks = project.tasks;
-  //   return tasks[taskname] ? tasks[taskname] : (tasks[taskname] = {});
-  // };
 
   exports.ensureTask = function (project, taskname) {
     if (!project.tasks[taskname]) {
@@ -162,6 +157,7 @@ exports.init = function (grunt) {
   };
 
   exports.defaultclientname = defaultclientname;
+  exports.defaultclientdesc = defaultclientdesc;
   exports.appDir = appDir;
 
   return exports;

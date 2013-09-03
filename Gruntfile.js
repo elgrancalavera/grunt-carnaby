@@ -13,7 +13,13 @@ module.exports = function(grunt) {
   // Project configuration.
 
   grunt.initConfig({
-    copy: {},
+    copy: {
+      test: {
+        files: {
+          '.carnaby/tmp/test.txt': 'test/fixtures/test.txt'
+        }
+      }
+    },
     handlebars: {},
     extend: {},
     watch: {
@@ -37,8 +43,8 @@ module.exports = function(grunt) {
       ]
     },
 
-    // Before generating any new files, remove any previously-created files.
-    clean: ['tmp', '.carnaby', 'dist'],
+    // Before generating any new files, remove any files created previously.
+    clean: ['tmp', '.carnaby/*', 'dist'],
 
     // Configuration to be run (and then tested).
     carnaby: {

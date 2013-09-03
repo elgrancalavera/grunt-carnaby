@@ -14,6 +14,15 @@ module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var hbsOptions = require('./lib/handlebars-options').init(grunt);
 
+  // tasks that we need to run every time we update a client.
+  var updateClientTasks = [
+    'copy',
+    'handlebars',
+    'extend',
+    'compass',
+    'carnaby:write-symlinks'
+  ];
+
   // [template, destination] destination relative to base path (added later)
 
   var commonTemplates = [
@@ -81,7 +90,7 @@ module.exports = function(grunt) {
 
     dest = path.join('.carnaby/tmp', client.name, 'templates');
     helpers.ensureTask(project, 'copy');
-    project.tasks.copy[client.name + '_templates'] = {
+    project.tasks.copy[client.name] = {
       files: [{
         expand: true,
         cwd: '<%= carnaby.appDir %>/common/templates',
@@ -159,6 +168,7 @@ module.exports = function(grunt) {
     // compass
     //
     //----------------------------------
+
     var srcbase = path.join('<% carnaby.appDir %>/', client.name);
     var dstbase = path.join('.carnaby/tmp', client.name);
     helpers.ensureTask(project, 'compass');
@@ -169,18 +179,17 @@ module.exports = function(grunt) {
       fontsDir: path.join(srcbase, 'styles/fonts'),
       javascriptsDir: path.join(srcbase, 'scripts'),
       importPath: '',
-      realtiveAssets: true
+      relativeAssets: true
     };
 
     //----------------------------------
     //
-    // Save and update
+    // Save: update should be handled
+    // by the actual Gruntfile.
     //
     //----------------------------------
 
     helpers.saveProject(project);
-    grunt.task.run('carnaby:update');
-
   };
 
   var processTemplate = function (options) {
@@ -248,45 +257,63 @@ module.exports = function(grunt) {
   //--------------------------------------------------------------------------
 
   /*
-   * carnaby:symlinks creates symlinks for common code in each client
+   * carnaby:update-client: updates the generated files for a client
    */
-  grunt.registerTask('carnaby:symlinks', 'Creates symlinks for common code in each client', function () {
-    var clients = helpers.readProject().clients;
-    grunt.util._.each(clients, function (client, name) {
-      var src = path.resolve(helpers.appDir, 'common/scripts/common');
-      var dst = path.resolve('.carnaby/tmp', client.name, 'scripts/common');
-      grunt.log.debug(src);
-      grunt.log.debug(dst);
-      fs.symlink(src, dst);
+  grunt.registerTask('carnaby:update-client', function () {
+    var force = this.flags.force;
+    var args = helpers.removeFlags(this.args);
+    var client = helpers.readClient(args[0]);
+    var clientTasks = grunt.util._.map(updateClientTasks, function (task) {
+      return task + ':' + client.name;
+    });
+    clientTasks = ['carnaby:update-config'].concat(clientTasks);
+    grunt.verbose.writeflags(clientTasks, 'client tasks');
+    grunt.task.run(clientTasks);
+  });
+
+  /*
+   * carnaby:write-symlinks writes symlinks for common code in each client
+   */
+  grunt.registerTask('carnaby:write-symlinks', function () {
+    var args = helpers.removeFlags(this.args);
+    var client = helpers.readClient(args[0]);
+    var src = path.resolve(helpers.appDir, 'common/scripts/common');
+    var dstparent = path.resolve('.carnaby/tmp', client.name, 'scripts');
+    var dst = path.resolve(dstparent, 'common');
+    grunt.log.debug(src);
+    grunt.log.debug(dstparent);
+    grunt.log.debug(dst);
+    if (!grunt.file.exists(dstparent)) {
+      grunt.log.writeln((dstparent + ' directory does not exist. Creating it.').yellow);
+      grunt.file.mkdir(dstparent);
+    }
+    fs.symlink(src, dst);
+  });
+
+  /*
+   * carnaby:update-config updates the main grunt config file. We just update the
+   * grunt config but we don't run the tasks. Once grunt is done, config
+   * will be out of date again.
+   */
+  grunt.registerTask('carnaby:update-config', function () {
+    var tasks = helpers.readProject().tasks;
+    grunt.util._.each(tasks, function (clients, task) {
+      grunt.verbose.writeflags(clients, task);
+      grunt.util._.each(clients, function (config, client) {
+        grunt.verbose.writeflags(config, client);
+        grunt.config(task + '.' + client, config);
+      });
     });
   });
 
   /*
-   * carnaby:update updates the main grunt config file
+   * carnaby:write-main: writes a main.js file
    */
-  grunt.registerTask('carnaby:update', 'updates the main grunt config file', function () {
-    var project = helpers.readProject();
-    grunt.config('copy', project.tasks.copy);
-    grunt.config('handlebars', project.tasks.handlebars);
-    grunt.config('handlebars.options', hbsOptions());
-    grunt.config('extend', project.tasks.extend);
-    grunt.config('compass', project.tasks.compass);
-    grunt.task.run(
-      'copy',
-      'handlebars',
-      'extend',
-      'compass',
-      'carnaby:mainjs:local',
-      'carnaby:symlinks'
-    );
-  });
-
-  /*
-   * carnaby:mainjs writes a main.js file
-   */
-  grunt.registerTask('carnaby:mainjs', 'Writes a main.js file for RequireJS', function () {
+  grunt.registerTask('carnaby:write-main', function () {
+    this.requires(['carnaby:update-config']);
+    var args = helpers.removeFlags(this.args);
     var targets = ['local', 'dev', 'qa', 'prod'];
-    var target = this.args[0];
+    var target = args[0] || targets[0];
     if (!grunt.util._.contains(targets, target)) {
       grunt.fatal('Unknown build target:"' + target + '". Aborting');
     }
@@ -312,7 +339,7 @@ module.exports = function(grunt) {
   /*
    * carnaby:template carnaby template task
    */
-  grunt.registerTask('carnaby:template', 'Writes a file from a template.', function() {
+  grunt.registerTask('carnaby:template', function() {
     var options = getTemplateOptions(this);
     processTemplate(options);
   });
@@ -322,30 +349,32 @@ module.exports = function(grunt) {
    *  ti templates don't replace any template tokens, just change their syntax
    *  and leaves them in place to be used developing grunt-init-carnaby
    */
-  grunt.registerTask('carnaby:init-template', 'Writes a file for grunt-init-carnaby from a template', function () {
+  grunt.registerTask('carnaby:init-template', function () {
     var options = getTemplateOptions(this);
     options.before = function (template) {
       return template.replace(/<%/g, '{%').replace(/%>/g, '%}');
     };
-    processTemplate.call(this, options);
+    processTemplate(options);
   });
 
   /*
    * carnaby:client generates a carnaby client application
    */
-  grunt.registerTask('carnaby:client', 'Generates a carnaby client application', function () {
-    var name = this.args[0];
-    var desc = this.args[1];
+  grunt.registerTask('carnaby:new-client', function () {
+    var args = helpers.removeFlags(this.args);
+    var name = args[0] || helpers.defaultclientname;
+    var desc = args[1] || helpers.defaultclientdesc;
     var force = this.flags.force;
     makeClient(name, desc, force);
+    grunt.task.run(helpers.checkForce(['carnaby:update-client:' + name], force));
   });
 
   /*
-   * carnaby
+   * carnaby:new-project
    */
-  grunt.registerTask('carnaby', 'carnaby project generation and installation', function () {
+  grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
     makeCommon(force);
-    makeClient(helpers.defaultclientname, 'Carnaby\'s default mobile client.', force);
+    grunt.task.run(helpers.checkForce(['carnaby:new-client'], force));
   });
 };
