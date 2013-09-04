@@ -29,9 +29,12 @@ function read(filename) {
 }
 
 function compare(filename, test) {
-  var actual = read(path.join('tmp', filename));
-  var expected = read(path.join('test', 'expected', filename));
-  test.equal(actual, expected, 'Text files shoule be equal: "' + filename +'"');
+  var actualFilepath = path.join('tmp', filename);
+  var expectedFilepath = path.join('test', 'expected', filename);
+  var actual = read(actualFilepath);
+  var expected = read(expectedFilepath);
+  var msg = 'Text files shoule be equal.\nActual: "' + actualFilepath +'".\nExpected: "' + expectedFilepath + '".';
+  test.equal(actual, expected, msg);
 }
 
 exports.carnaby = {

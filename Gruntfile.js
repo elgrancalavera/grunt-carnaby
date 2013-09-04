@@ -136,8 +136,8 @@ module.exports = function(grunt) {
   grunt.registerTask('default', [
     'clean',
     'jshint:dev',
-    'carnaby',
-    'carnaby:client:desktop',
+    'carnaby:new-project',
+    'carnaby:new-client:desktop',
     'carnaby:templates',
     'jshint:artifacts',
     'nodeunit'
