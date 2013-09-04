@@ -260,24 +260,28 @@ module.exports = function(grunt) {
   //--------------------------------------------------------------------------
 
   /*
-   * carnaby:update-client: updates the generated files for a client
+   * carnaby:update-client[:client][:target] updates the generated files for a client
+   * defaults to carnaby:update-client:mobile:local
    */
   grunt.registerTask('carnaby:update-client', function () {
     var force = this.flags.force;
     var args = helpers.removeFlags(this.args);
     var client = helpers.readClient(args[0]);
+    var target = helpers.getTarget(args[1]);
     var clientTasks = grunt.util._.map(updateClientTasks, function (task) {
       return task + ':' + client.name;
     });
-    clientTasks = [
-      'carnaby:update-config'
-    ].concat(clientTasks);
+    clientTasks = [].concat(
+      'carnaby:update-config',
+      clientTasks,
+      'carnaby:write-main:' + client.name + ':' + target
+    );
     grunt.verbose.writeflags(clientTasks, 'client tasks');
     grunt.task.run(clientTasks);
   });
 
   /*
-   * carnaby:write-symlinks writes symlinks for common code in each client
+   * carnaby:write-symlinks[:client] writes symlinks for common code in each client
    */
   grunt.registerTask('carnaby:write-symlinks', function () {
     var args = helpers.removeFlags(this.args);
@@ -356,7 +360,8 @@ module.exports = function(grunt) {
   });
 
   /*
-   * carnaby:client generates a carnaby client application
+   * carnaby:new-client[:client] generates a carnaby client application
+   * defaults to carnaby:new-client:mobile
    */
   grunt.registerTask('carnaby:new-client', function () {
     var args = helpers.removeFlags(this.args);
