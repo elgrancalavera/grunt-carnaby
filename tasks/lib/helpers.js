@@ -14,7 +14,6 @@ exports.init = function (grunt) {
 
   var config = grunt.config('carnaby');
   var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
-
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
@@ -148,6 +147,15 @@ exports.init = function (grunt) {
     }
     grunt.verbose.writeflags(client, name);
     return client;
+  };
+
+  exports.getTarget = function (target) {
+    var knownTargets = ['local', 'dev', 'qa', 'prod'];
+    target = target || knownTargets[0];
+    if (!grunt.util._.contains(knownTargets, target)) {
+      grunt.fatal('Unknown build target:"' + target + '". Aborting');
+    }
+    return target;
   };
 
   exports.ensureTask = function (project, taskname) {

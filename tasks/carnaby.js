@@ -250,6 +250,9 @@ module.exports = function(grunt) {
     return options;
   };
 
+  var writeSymlink = function (src, dst) {
+  };
+
   //--------------------------------------------------------------------------
   //
   // Tasks
@@ -266,7 +269,9 @@ module.exports = function(grunt) {
     var clientTasks = grunt.util._.map(updateClientTasks, function (task) {
       return task + ':' + client.name;
     });
-    clientTasks = ['carnaby:update-config'].concat(clientTasks);
+    clientTasks = [
+      'carnaby:update-config'
+    ].concat(clientTasks);
     grunt.verbose.writeflags(clientTasks, 'client tasks');
     grunt.task.run(clientTasks);
   });
@@ -278,15 +283,14 @@ module.exports = function(grunt) {
     var args = helpers.removeFlags(this.args);
     var client = helpers.readClient(args[0]);
     var src = path.resolve(helpers.appDir, 'common/scripts/common');
-    var dstparent = path.resolve('.carnaby/tmp', client.name, 'scripts');
-    var dst = path.resolve(dstparent, 'common');
-    grunt.log.debug(src);
-    grunt.log.debug(dstparent);
-    grunt.log.debug(dst);
-    if (!grunt.file.exists(dstparent)) {
-      grunt.log.writeln((dstparent + ' directory does not exist. Creating it.').yellow);
-      grunt.file.mkdir(dstparent);
+    var dst = path.resolve('.carnaby/tmp', client.name, 'scripts/common');
+    var parent = path.dirname(dst);
+    if (!grunt.file.exists(parent)) {
+      grunt.log.writeln((parent + ' directory does not exist. Creating it.').yellow);
+      grunt.file.mkdir(parent);
     }
+    grunt.log.debug('src:', src);
+    grunt.log.debug('dst:', dst);
     fs.symlink(src, dst);
   });
 
@@ -307,33 +311,27 @@ module.exports = function(grunt) {
   });
 
   /*
-   * carnaby:write-main: writes a main.js file
+   * carnaby:write-main[:client][:target] writes a main.js file
+   * defaults to carnaby:write-main:mobile:local
    */
   grunt.registerTask('carnaby:write-main', function () {
     this.requires(['carnaby:update-config']);
     var args = helpers.removeFlags(this.args);
     var targets = ['local', 'dev', 'qa', 'prod'];
-    var target = args[0] || targets[0];
-    if (!grunt.util._.contains(targets, target)) {
-      grunt.fatal('Unknown build target:"' + target + '". Aborting');
-    }
-    var source = path.join('config/', target + '.json');
-    var clients = helpers.readProject().clients;
-
-    grunt.util._.each(clients, function (client, name) {
-      var config = grunt.file.read(path.join('.carnaby/tmp', name, source));
-      var context = {
-        config: config
-      };
-      processTemplate({
-        filepath: path.join(name, 'scripts/main.js'),
-        template: 'main',
-        force: true,
-        context: context,
-        base: target === 'local' ? '.carnaby/tmp' : 'dist'
-      });
+    var client = helpers.readClient(args[0]);
+    var target = helpers.getTarget(args[1]);
+    var source = path.join('.carnaby/tmp', client.name, 'config', target + '.json');
+    grunt.log.debug('config source:', source);
+    var context = {
+      config: grunt.file.read(source)
+    };
+    processTemplate({
+      filepath: path.join(client.name, 'scripts/main.js'),
+      template: 'main',
+      force: true,
+      context: context,
+      base: target === 'local' ? '.carnaby/tmp' : 'dist'
     });
-
   });
 
   /*

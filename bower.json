@@ -1,0 +1,22 @@
+{
+  "name": "grunt-carnaby",
+  "version": "0.0.0",
+  "homepage": "https://github.com/elgrancalavera/grunt-carnaby",
+  "authors": [
+    "Leon Coto <leon.coto@mcsaatchi.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "html5-boilerplate": "~4.2.0",
+    "requirejs": "~2.1.8",
+    "marionette": "~1.1.0",
+    "handlebars": "~1.0.0"
+  }
+}

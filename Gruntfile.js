@@ -8,11 +8,64 @@
  */
 'use strict';
 
+/*global module:false*/
+var LIVERELOAD_PORT = 35729;
+var lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT});
+var mountFolder = function (connect, dir) {
+  return connect.static(require('path').resolve(dir));
+};
+
 module.exports = function(grunt) {
 
   // Project configuration.
 
   grunt.initConfig({
+
+    //--------------------------------------------------------------------------
+    //
+    // Carnaby
+    //
+    //--------------------------------------------------------------------------
+
+    carnaby: {
+      appDir: 'tmp'
+    },
+
+    //--------------------------------------------------------------------------
+    //
+    // Grunt
+    //
+    //--------------------------------------------------------------------------
+
+    connect: {
+      options: {
+        port: 9000,
+        // change this to '0.0.0.0' to access the server from outside
+        hostname: 'localhost'
+      },
+      dist: {
+        options: {
+          middleware: function (connect) {
+            return [
+              mountFolder(connect, 'dist')
+            ];
+          }
+        }
+      },
+      livereload: {
+        options: {
+          middleware: function (connect) {
+            return [
+              lrSnippet,
+              mountFolder(connect, '.carnaby/tmp'),
+              mountFolder(connect, 'vendor'),
+              mountFolder(connect, grunt.config('carnaby.appDir'))
+            ];
+          }
+        }
+      }
+    },
+
     copy: {
       test: {
         files: {
@@ -20,6 +73,7 @@ module.exports = function(grunt) {
         }
       }
     },
+
     handlebars: {},
     extend: {},
     watch: {
@@ -46,15 +100,10 @@ module.exports = function(grunt) {
     // Before generating any new files, remove any files created previously.
     clean: ['tmp', '.carnaby/*', 'dist'],
 
-    // Configuration to be run (and then tested).
-    carnaby: {
-      appDir: 'tmp'
-    },
-
     // Unit tests.
     nodeunit: {
       tests: ['test/*_test.js'],
-    },
+    }
 
   });
 
