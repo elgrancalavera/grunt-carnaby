@@ -44,6 +44,10 @@ exports.requireconfprod = [
   'json/require-client-prod.json'
 ];
 
+exports.project = [
+  'json/project.json'
+];
+
 //----------------------------------
 //
 // Handlebars
@@ -112,6 +116,22 @@ exports.itemview = [
   'js/header.js',
   'js/header-amd.js',
   'js/item-view.js',
+  'js/footer-amd.js',
+  'js/footer.js'
+];
+
+exports.extensions = [
+  'js/header.js',
+  'js/header-amd.js',
+  'js/extensions.js',
+  'js/footer-amd.js',
+  'js/footer.js'
+];
+
+exports['handlebars-loader'] = [
+  'js/header.js',
+  'js/header-amd.js',
+  'js/handlebars-loader.js',
   'js/footer-amd.js',
   'js/footer.js'
 ];

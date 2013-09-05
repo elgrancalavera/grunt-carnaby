@@ -33,7 +33,9 @@ module.exports = function(grunt) {
     ['requireconfqa', 'config/qa.json'],
     ['requireconfprod', 'config/prod.json'],
     ['requireconflocal', 'config/local.json'],
-    ['hbs', 'templates/main-view.hbs']
+    ['hbs', 'templates/main-view.hbs'],
+    ['extensions', 'scripts/common/helpers/extensions.js'],
+    ['handlebars-loader', 'scripts/common/helpers/handlebars-loader.js']
   ];
 
   var clientTemplates = [
@@ -211,7 +213,7 @@ module.exports = function(grunt) {
     var filepathnoext = path.join(dirname, filenamenoext);
     var template = before(helpers.getTemplate(options.template));
 
-    var context = grunt.util._.extend(helpers.readPackage(), options.context || {}, {
+    var context = grunt.util._.extend(options.context || {}, {
       filename: filename,
       extname: extname,
       dirname: dirname,
@@ -222,11 +224,8 @@ module.exports = function(grunt) {
 
     grunt.verbose.writeflags(options, 'Options');
     grunt.verbose.writeflags(context, 'Context');
-    grunt.log.debug(template);
-    grunt.log.debug(dest);
+    helpers.writeTemplate(dest, template, context);
 
-    grunt.file.write(dest, grunt.template.process(template, { data: context }));
-    grunt.log.ok('File "' + dest + '" written.');
   };
 
   var processMultipleTemplates = function (optionsList) {
@@ -248,9 +247,6 @@ module.exports = function(grunt) {
     };
     grunt.verbose.writeflags(options, 'Template options');
     return options;
-  };
-
-  var writeSymlink = function (src, dst) {
   };
 
   //--------------------------------------------------------------------------
@@ -295,7 +291,7 @@ module.exports = function(grunt) {
     }
     grunt.log.debug('src:', src);
     grunt.log.debug('dst:', dst);
-    fs.symlink(src, dst);
+    fs.symlinkSync(src, dst);
   });
 
   /*

@@ -33,10 +33,6 @@ exports.init = function (grunt) {
   //
   //--------------------------------------------------------------------------
 
-  var fatal = function (msg) {
-
-  };
-
   var makeReader = function (reader, basedir) {
     return function (filepath) {
       var p = path.join(filesdir, basedir, filepath);
@@ -60,6 +56,12 @@ exports.init = function (grunt) {
     return grunt.util._.reduce(definition, function (txt, filepath) {
       return txt + readTemplate(filepath);
     }, '');
+  };
+
+  var writeTemplate = exports.writeTemplate = function (dest, template, context) {
+    context = grunt.util._.extend(readPackage(), context);
+    grunt.file.write(dest, grunt.template.process(template, {data: context}));
+    grunt.log.ok('File "%s" written.', dest);
   };
 
   var saveProject = exports.saveProject = function (project) {
@@ -115,7 +117,8 @@ exports.init = function (grunt) {
 
   exports.createProject = function (force) {
     checkFile(projectfile, force);
-    grunt.file.copy(path.join(filesdir, 'json/project.json'), projectfile);
+    var template = getTemplate('project');
+    writeTemplate(projectfile, template);
     return exports;
   };
 
