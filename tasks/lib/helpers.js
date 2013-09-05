@@ -14,6 +14,7 @@ exports.init = function (grunt) {
 
   var config = grunt.config('carnaby');
   var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
+  var bowerDir = grunt.config('carnaby.bowerDir') || 'bower_components';
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
@@ -170,6 +171,7 @@ exports.init = function (grunt) {
   exports.defaultclientname = defaultclientname;
   exports.defaultclientdesc = defaultclientdesc;
   exports.appDir = appDir;
+  exports.bowerDir = bowerDir;
 
   return exports;
 };

@@ -2,7 +2,7 @@
   require('backbone.marionette');
   exports = new Backbone.Marionette.Application();
   var _ = require('underscore');
-  var app = require('core/app');
+  var app = require('common/app');
 
   /*
    * Attempts to resolve a template using the application's templates, falling

@@ -13,6 +13,13 @@ var fs = require('fs');
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var hbsOptions = require('./lib/handlebars-options').init(grunt);
+  var html5bp = [
+    '404.html',
+    'apple*',
+    'favicon.ico',
+    'humans.txt',
+    'robots.txt'
+  ];
 
   // tasks that we need to run every time we update a client.
   var updateClientTasks = [
@@ -20,22 +27,25 @@ module.exports = function(grunt) {
     'handlebars',
     'extend',
     'compass',
-    'carnaby:write-symlinks'
+    // 'carnaby:write-symlinks',
   ];
 
   // [template, destination] destination relative to base path (added later)
 
   var commonTemplates = [
-    ['mainapp', 'scripts/common/app.js'],
-    ['appcontroller', 'scripts/common/controllers/app-controller.js'],
+    // Common
+    ['mainapp', 'common/scripts/app.js'],
+    ['appcontroller', 'common/scripts/controllers/app-controller.js'],
+    ['extensions', 'common/scripts/helpers/extensions.js'],
+    ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
+    // Config
     ['requirebase', 'config/base.json'],
     ['requireconfdev', 'config/dev.json'],
     ['requireconfqa', 'config/qa.json'],
     ['requireconfprod', 'config/prod.json'],
     ['requireconflocal', 'config/local.json'],
+    // Templates
     ['hbs', 'templates/main-view.hbs'],
-    ['extensions', 'scripts/common/helpers/extensions.js'],
-    ['handlebars-loader', 'scripts/common/helpers/handlebars-loader.js']
   ];
 
   var clientTemplates = [
@@ -46,7 +56,7 @@ module.exports = function(grunt) {
     ['requireconfprod', 'config/prod.json'],
     ['requireconflocal', 'config/local.json'],
     ['index', 'index.html'],
-    ['hbs', 'templates/client-main-view.hbs']
+    ['hbs', 'templates/client-main-view.hbs'],
   ];
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
@@ -63,13 +73,7 @@ module.exports = function(grunt) {
     var options = {
       force: force
     };
-    var templates = makeTemplateOptionsList(commonTemplates, 'common', options);
-    // temp: top level index file
-    processTemplate({
-      force: force,
-      filepath: 'index.html',
-      template: 'html'
-    });
+    var templates = makeTemplateOptionsList(commonTemplates, 'core', options);
     processMultipleTemplates(templates);
   };
 
@@ -79,6 +83,7 @@ module.exports = function(grunt) {
       force: force,
       client: client,
       context: {
+        client: client
       }
     };
     var templates = makeTemplateOptionsList(clientTemplates, name, options);
@@ -137,29 +142,29 @@ module.exports = function(grunt) {
     dest = path.join('.carnaby/tmp', client.name, 'config');
 
     files[path.join(dest, 'local.json')] = [
-      '<%= carnaby.appDir %>/common/config/base.json',
-      '<%= carnaby.appDir %>/common/config/local.json',
+      '<%= carnaby.appDir %>/core/config/base.json',
+      '<%= carnaby.appDir %>/core/config/local.json',
       path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
       path.join('<%= carnaby.appDir %>', client.name, 'config/local.json')
     ];
 
     files[path.join(dest, 'dev.json')] = [
-      '<%= carnaby.appDir %>/common/config/base.json',
-      '<%= carnaby.appDir %>/common/config/dev.json',
+      '<%= carnaby.appDir %>/core/config/base.json',
+      '<%= carnaby.appDir %>/core/config/dev.json',
       path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
       path.join('<%= carnaby.appDir %>', client.name, 'config/dev.json')
     ];
 
     files[path.join(dest, 'qa.json')] = [
-      '<%= carnaby.appDir %>/common/config/base.json',
-      '<%= carnaby.appDir %>/common/config/qa.json',
+      '<%= carnaby.appDir %>/core/config/base.json',
+      '<%= carnaby.appDir %>/core/config/qa.json',
       path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
       path.join('<%= carnaby.appDir %>', client.name, 'config/qa.json')
     ];
 
     files[path.join(dest, 'prod.json')] = [
-      '<%= carnaby.appDir %>/common/config/base.json',
-      '<%= carnaby.appDir %>/common/config/prod.json',
+      '<%= carnaby.appDir %>/core/config/base.json',
+      '<%= carnaby.appDir %>/core/config/prod.json',
       path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
       path.join('<%= carnaby.appDir %>', client.name, 'config/prod.json')
     ];
@@ -262,6 +267,55 @@ module.exports = function(grunt) {
   //--------------------------------------------------------------------------
 
   /*
+   * carnaby:vendor-cherry-pick:vendor:file[:file_n][:force] Cherry picks files from a given
+   * vendor and makes them part of the common code under version control
+   */
+  grunt.registerTask('carnaby:vendor-cherry-pick', function () {
+    var args = helpers.removeFlags(this.args);
+    var force = this.flags.force;
+    var vendor = args.shift();
+    var picks = args;
+    var vendorDir = path.join(helpers.bowerDir, vendor);
+
+    if (!vendor) {
+      grunt.fatal('Please specify a vendor to cherry pick from.');
+    }
+
+    if (!grunt.file.exists(vendorDir)) {
+      grunt.fatal('Unknown vendor "' + vendor +'". Maybe you forgot to run "bower install ' + vendor + ' --save"?', vendor);
+    }
+
+    if (!picks.length) {
+      grunt.fatal('Please specify at least 1 file to pick.');
+    }
+
+    var cherryPicks = picks.reduce(function (expandedPicks, pick) {
+      var pickPath = path.join(vendorDir, pick);
+      var destBasePath = path.join(helpers.appDir, 'common');
+
+      var expanded = grunt.file.expand(pickPath);
+      var noMatch = pickPath + ' didn\'n match any files.';
+
+      if (!expanded.length && !force) {
+        grunt.fatal(noMatch + '\nAppend ":force" at the end of your task to skip this batch.');
+      }
+      if (!expanded.length && force) {
+        grunt.log.writeln((noMatch + ' Skipping.').yellow);
+      }
+      return expandedPicks.concat(expanded);
+    }, []);
+
+    grunt.verbose.writeln('vendor: %s', vendor);
+    grunt.verbose.writeflags(cherryPicks, 'cherryPicks');
+
+    cherryPicks.forEach(function (src) {
+      var dest = path.join(helpers.appDir, 'common', path.relative(vendorDir, src));
+      grunt.file.copy(src, dest);
+    });
+
+  });
+
+  /*
    * carnaby:update-client[:client][:target] updates the generated files for a client
    * defaults to carnaby:update-client:mobile:local
    */
@@ -288,8 +342,8 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:write-symlinks', function () {
     var args = helpers.removeFlags(this.args);
     var client = helpers.readClient(args[0]);
-    var src = path.resolve(helpers.appDir, 'common/scripts/common');
-    var dst = path.resolve('.carnaby/tmp', client.name, 'scripts/common');
+    var src = path.resolve(helpers.appDir, 'core/common');
+    var dst = path.resolve('.carnaby/tmp', client.name, 'common');
     var parent = path.dirname(dst);
     if (!grunt.file.exists(parent)) {
       grunt.log.writeln((parent + ' directory does not exist. Creating it.').yellow);
@@ -379,7 +433,24 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
+
     makeCommon(force);
-    grunt.task.run(helpers.checkForce(['carnaby:new-client'], force));
+
+    // wip, see: https://trello.com/c/voW4ddEK
+    processTemplate({
+      force: force,
+      filepath: 'index.html',
+      template: 'html'
+    });
+
+    var vendorCherryPick =
+      ['carnaby', 'vendor-cherry-pick', 'html5-boilerplate']
+      .concat(html5bp).join(':');
+
+    grunt.task.run(helpers.checkForce([
+      'carnaby:new-client',
+      vendorCherryPick
+    ], force));
+
   });
 };

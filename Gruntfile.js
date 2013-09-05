@@ -7,12 +7,12 @@
  * Licensed under the MIT license.
  */
 'use strict';
-
+var path = require('path');
 /*global module:false*/
 var LIVERELOAD_PORT = 35729;
 var lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT});
 var mountFolder = function (connect, dir) {
-  return connect.static(require('path').resolve(dir));
+  return connect.static(path.resolve(dir));
 };
 
 module.exports = function(grunt) {
@@ -60,6 +60,7 @@ module.exports = function(grunt) {
               lrSnippet,
               mountFolder(connect, '.carnaby/tmp'),
               mountFolder(connect, 'vendor'),
+              mountFolder(connect, path.join(grunt.config('carnaby.appDir') , 'core')),
               mountFolder(connect, grunt.config('carnaby.appDir'))
             ];
           }
