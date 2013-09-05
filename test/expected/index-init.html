@@ -9,16 +9,18 @@
     <title>{%= name %}</title>
     <meta name="description" content="{%= description %}">
     <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" type="text/css" href="/bower_components/html5-boilerplate/css/normalize.css">
     <link rel="stylesheet" href="styles/main.css">
   </head>
   <body>
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
+    <h1>{%= description %}</h1>
     <section id="main"></section>
     <!-- For the sake of clarity, we are only using the HTML5BP plugins because
     of the console shim -->
-    <script src="scripts/plugins.js"></script>
+    <script src="/bower_components/html5-boilerplate/js/plugins.js"></script>
     <script src="/bower_components/handlebars/handlebars.js"></script>
     <script data-main="scripts/main" src="/bower_components/requirejs/require.js"></script>
   </body>

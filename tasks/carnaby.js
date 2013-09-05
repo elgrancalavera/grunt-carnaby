@@ -64,6 +64,12 @@ module.exports = function(grunt) {
       force: force
     };
     var templates = makeTemplateOptionsList(commonTemplates, 'common', options);
+    // temp: top level index file
+    processTemplate({
+      force: force,
+      filepath: 'index.html',
+      template: 'html'
+    });
     processMultipleTemplates(templates);
   };
 

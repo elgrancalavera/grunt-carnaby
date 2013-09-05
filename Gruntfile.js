@@ -28,7 +28,8 @@ module.exports = function(grunt) {
     //--------------------------------------------------------------------------
 
     carnaby: {
-      appDir: 'tmp'
+      appDir: 'tmp',
+      bowerDir: grunt.file.readJSON('.bowerrc').directory
     },
 
     //--------------------------------------------------------------------------
@@ -77,6 +78,18 @@ module.exports = function(grunt) {
     handlebars: {},
     extend: {},
     watch: {
+      options: {
+        nospawn: true,
+        livereload: true
+      },
+      livereload: {
+        options: {
+          livereload: LIVERELOAD_PORT
+        },
+        files: [
+          'tmp/*.html'
+        ]
+      },
       dev: {
         files: '<%= jshint.dev %>',
         tasks: ['jshint:dev']
@@ -98,7 +111,7 @@ module.exports = function(grunt) {
     },
 
     // Before generating any new files, remove any files created previously.
-    clean: ['tmp', '.carnaby/*', 'dist'],
+    clean: ['tmp/*', '.carnaby/*', 'dist'],
 
     // Unit tests.
     nodeunit: {
@@ -136,13 +149,11 @@ module.exports = function(grunt) {
   grunt.registerTask('default', [
     'clean',
     'jshint:dev',
-    'carnaby:new-project',
-    'carnaby:new-client:desktop',
     'carnaby:templates',
     'jshint:artifacts',
     'nodeunit'
   ]);
 
-  grunt.registerTask('code', ['jshint:dev', 'watch']);
+  grunt.registerTask('code', ['jshint:dev', 'connect:livereload', 'watch']);
 
 };
