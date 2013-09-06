@@ -1,0 +1,21 @@
+<!-- temp -->
+<style type="text/css">
+  html {
+    background-color: #eeeeee;
+  }
+  body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+  }
+  .client {
+    padding: 10px;
+    border-top: 1px solid #333333;
+  }
+</style>
+<% _.each(clients, function (client) { %><div class="client">
+  <h2><%= client.name %></h2>
+  <p><%= client.description %></p>
+  <p><a href="<%= client.name %>">view</a></p>
+</div><% }) %>
