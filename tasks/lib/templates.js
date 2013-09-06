@@ -162,6 +162,14 @@ exports.index = [
   'html/footer.html'
 ];
 
+exports.projectindex = [
+  'html/header.html',
+  'html/body.html',
+  'html/project.html',
+  'html/scripts.html',
+  'html/footer.html'
+];
+
 //----------------------------------
 //
 // SCSS

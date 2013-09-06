@@ -46,7 +46,7 @@ module.exports = function(grunt) {
     // Templates
     ['hbs', 'templates/main-view.hbs'],
     // Style sheets
-    ['commonstylesheet', 'common/styles/_common.scss']
+    ['commonstylesheet', 'common/styles/_common.scss'],
   ];
 
   var clientTemplates = [
@@ -75,6 +75,7 @@ module.exports = function(grunt) {
     var options = {
       force: force
     };
+    grunt.verbose.writeflags(options, 'makeCommon options');
     var templates = makeTemplateOptionsList(commonTemplates, 'core', options);
     processMultipleTemplates(templates);
   };
@@ -360,6 +361,22 @@ module.exports = function(grunt) {
   });
 
   /*
+   * carnaby:update-index updates the project index
+   */
+  grunt.registerTask('carnaby:update-index', function () {
+    var clients = helpers.readProject().clients;
+    grunt.verbose.writeflags(clients, 'clients');
+    processTemplate({
+      filepath: 'index.html',
+      template: 'projectindex',
+      force: true,
+      context: {
+        clients: clients
+      }
+    });
+  });
+
+  /*
    * carnaby:write-main[:client][:target] writes a main.js file
    * defaults to carnaby:write-main:mobile:local
    */
@@ -423,14 +440,13 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
 
-    makeCommon(force);
 
     // wip, see: https://trello.com/c/voW4ddEK
-    processTemplate({
-      force: force,
-      filepath: 'index.html',
-      template: 'html'
-    });
+    // processTemplate({
+    //   force: force,
+    //   filepath: 'index.html',
+    //   template: 'html'
+    // });
 
     var vendorCherryPick =
       ['carnaby', 'vendor-cherry-pick', 'html5-boilerplate']
@@ -440,6 +456,8 @@ module.exports = function(grunt) {
       'carnaby:new-client',
       vendorCherryPick
     ], force));
+
+    makeCommon(force);
 
   });
 };

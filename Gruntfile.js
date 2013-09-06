@@ -94,6 +94,10 @@ module.exports = function(grunt) {
       dev: {
         files: '<%= jshint.dev %>',
         tasks: ['jshint:dev']
+      },
+      updateConfig: {
+        files: '.carnaby/project.json',
+        tasks: ['carnaby:update-config']
       }
     },
     jshint: {
