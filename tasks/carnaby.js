@@ -26,8 +26,7 @@ module.exports = function(grunt) {
     'copy',
     'handlebars',
     'extend',
-    'compass',
-    // 'carnaby:write-symlinks',
+    'compass'
   ];
 
   // [template, destination] destination relative to base path (added later)
@@ -46,6 +45,8 @@ module.exports = function(grunt) {
     ['requireconflocal', 'config/local.json'],
     // Templates
     ['hbs', 'templates/main-view.hbs'],
+    // Style sheets
+    ['commonstylesheet', 'common/styles/_common.scss']
   ];
 
   var clientTemplates = [
@@ -57,6 +58,7 @@ module.exports = function(grunt) {
     ['requireconflocal', 'config/local.json'],
     ['index', 'index.html'],
     ['hbs', 'templates/client-main-view.hbs'],
+    ['clientstylesheet', 'styles/main.scss']
   ];
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
@@ -182,17 +184,21 @@ module.exports = function(grunt) {
     //
     //----------------------------------
 
-    var srcbase = path.join('<% carnaby.appDir %>/', client.name);
+    var srcbase = path.join('<%= carnaby.appDir %>/', client.name);
     var dstbase = path.join('.carnaby/tmp', client.name);
+    var commonbase = path.join('<%= carnaby.appDir %>', 'core/common/styles');
+
     helpers.ensureTask(project, 'compass');
     project.tasks.compass[client.name] = {
-      sassDir: path.join(srcbase, 'styles'),
-      cssDir: path.join(dstbase, 'styles'),
-      imagesDir: path.join(srcbase, 'images'),
-      fontsDir: path.join(srcbase, 'styles/fonts'),
-      javascriptsDir: path.join(srcbase, 'scripts'),
-      importPath: '',
-      relativeAssets: true
+      options: {
+        sassDir: path.join(srcbase, 'styles'),
+        cssDir: path.join(dstbase, 'styles'),
+        imagesDir: path.join(srcbase, 'images'),
+        fontsDir: path.join(commonbase, 'fonts'),
+        javascriptsDir: path.join(srcbase, 'scripts'),
+        importPath: commonbase,
+        relativeAssets: true
+      }
     };
 
     //----------------------------------
@@ -275,11 +281,10 @@ module.exports = function(grunt) {
     var force = this.flags.force;
     var vendor = args.shift();
     var picks = args;
-    var vendorDir = path.join(helpers.bowerDir, vendor);
-
     if (!vendor) {
       grunt.fatal('Please specify a vendor to cherry pick from.');
     }
+    var vendorDir = path.join(helpers.bowerDir, vendor);
 
     if (!grunt.file.exists(vendorDir)) {
       grunt.fatal('Unknown vendor "' + vendor +'". Maybe you forgot to run "bower install ' + vendor + ' --save"?', vendor);
@@ -291,7 +296,6 @@ module.exports = function(grunt) {
 
     var cherryPicks = picks.reduce(function (expandedPicks, pick) {
       var pickPath = path.join(vendorDir, pick);
-      var destBasePath = path.join(helpers.appDir, 'common');
 
       var expanded = grunt.file.expand(pickPath);
       var noMatch = pickPath + ' didn\'n match any files.';
@@ -309,7 +313,7 @@ module.exports = function(grunt) {
     grunt.verbose.writeflags(cherryPicks, 'cherryPicks');
 
     cherryPicks.forEach(function (src) {
-      var dest = path.join(helpers.appDir, 'common', path.relative(vendorDir, src));
+      var dest = path.join(helpers.appDir, 'core', path.relative(vendorDir, src));
       grunt.file.copy(src, dest);
     });
 
@@ -337,24 +341,6 @@ module.exports = function(grunt) {
   });
 
   /*
-   * carnaby:write-symlinks[:client] writes symlinks for common code in each client
-   */
-  grunt.registerTask('carnaby:write-symlinks', function () {
-    var args = helpers.removeFlags(this.args);
-    var client = helpers.readClient(args[0]);
-    var src = path.resolve(helpers.appDir, 'core/common');
-    var dst = path.resolve('.carnaby/tmp', client.name, 'common');
-    var parent = path.dirname(dst);
-    if (!grunt.file.exists(parent)) {
-      grunt.log.writeln((parent + ' directory does not exist. Creating it.').yellow);
-      grunt.file.mkdir(parent);
-    }
-    grunt.log.debug('src:', src);
-    grunt.log.debug('dst:', dst);
-    fs.symlinkSync(src, dst);
-  });
-
-  /*
    * carnaby:update-config updates the main grunt config file. We just update the
    * grunt config but we don't run the tasks. Once grunt is done, config
    * will be out of date again.
@@ -364,8 +350,11 @@ module.exports = function(grunt) {
     grunt.util._.each(tasks, function (clients, task) {
       grunt.verbose.writeflags(clients, task);
       grunt.util._.each(clients, function (config, client) {
+        var target = task + '.' + client;
         grunt.verbose.writeflags(config, client);
-        grunt.config(task + '.' + client, config);
+        grunt.config(target, config);
+        grunt.verbose.writeflags(grunt.config(target), target);
+
       });
     });
   });

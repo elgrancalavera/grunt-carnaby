@@ -161,3 +161,21 @@ exports.index = [
   'html/scripts-index.html',
   'html/footer.html'
 ];
+
+//----------------------------------
+//
+// SCSS
+//
+//----------------------------------
+
+exports.commonstylesheet = [
+  // just because they look the same...
+  'js/header.js',
+  'scss/common.scss'
+];
+
+exports.clientstylesheet = [
+  // just because they look the same...
+  'js/header.js',
+  'scss/client.scss'
+];
