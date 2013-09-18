@@ -148,7 +148,14 @@ module.exports = function(grunt) {
     'carnaby:init-template:appcontroller:app-controller-init.js',
 
     'carnaby:init-template:index:index-init.html',
-    'carnaby:init-template:html:html-init.html'
+    'carnaby:init-template:html:html-init.html',
+
+
+  ]);
+
+  grunt.registerTask('carnaby:workflow', [
+    'carnaby:new-project',
+    'carnaby:new-client:bacon-sandwich'
   ]);
 
   grunt.registerTask('default', [
@@ -156,9 +163,18 @@ module.exports = function(grunt) {
     'jshint:dev',
     'carnaby:templates',
     'jshint:artifacts',
-    'nodeunit'
+    'nodeunit',
+    'clean',
+    'carnaby:workflow',
+    'jshint:artifacts',
   ]);
 
-  grunt.registerTask('code', ['jshint:dev', 'connect:livereload', 'watch']);
+  grunt.registerTask('ci', [
+    'clean',
+    'carnaby:workflow',
+    'jshint:dev',
+    'connect:livereload',
+    'watch',
+  ]);
 
 };

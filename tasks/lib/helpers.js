@@ -18,11 +18,13 @@ exports.init = function (grunt) {
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
+  var defaulttargetname = 'production';
   var defaultclientdesc = 'Another Carnaby client';
   var exports = {};
   // flags (to be removed before doing stuff):
   var flags = [
-    'force'
+    'force',
+    'dry-run'
   ];
 
   var abortmsg = ' Aborting.\nAppend ":force" at the end of your task call to overwrite.';
@@ -141,16 +143,27 @@ exports.init = function (grunt) {
     return exports;
   };
 
-  var readClient = exports.readClient = function (name) {
+  var readClient = exports.readClient = function (name, lenient) {
     name = name || defaultclientname;
     var clients = readProject().clients;
     var client = clients[name];
     grunt.verbose.writeflags(clients, 'known clients');
-    if (!client) {
-      grunt.fatal('Unknown client "' + name + '". Aborting.' );
+    if (!client && !lenient) {
+      grunt.fatal('Unknown client "' + name + '". Aborting.');
     }
     grunt.verbose.writeflags(client, name);
     return client;
+  };
+
+  var readTarget = exports.readTarget = function (name, lenient) {
+    name = name || defaulttargetname;
+    var targets = readProject().targets;
+    var target = targets[name];
+    if (!target && !lenient) {
+      grunt.fatal('Unknown target "' + name + '". Aborting.');
+    }
+    grunt.verbose.writeflags(target, name);
+    return target;
   };
 
   exports.getTarget = function (target) {
@@ -167,6 +180,58 @@ exports.init = function (grunt) {
       project.tasks[taskname] = {};
     }
   };
+
+  exports.createTarget = function (name, pathName, description, force) {
+    var project = readProject();
+    var targets = project.targets;
+    var existsmsg = 'Target "' + name + '" already exists. ';
+    var exists = !!readTarget(name, true);
+
+    if (exists && !force) {
+      grunt.fatal(existsmsg + abortmsg);
+    }
+    if (exists && force) {
+      grunt.log.writeln((existsmsg + overwritemsg).yellow);
+    }
+
+    grunt.util._.each(targets, function (target, key) {
+      if (target.path === pathName && key !== name) {
+        grunt.fatal('The provided path is already in use by the "' +
+          key + '" target. Aborting.');
+      }
+    });
+
+    targets[name] = {
+      name: name,
+      path: pathName,
+      description: description
+    };
+
+    saveProject(project);
+  };
+
+  exports.deleteTarget = function (name, dry) {
+    var target = readTarget(name);
+    var project = readProject();
+
+    if (grunt.util._.keys(project.targets).length === 1) {
+      grunt.fatal('\nThere is only one (1) deployment target remaining in ' +
+        'your project.\nCarnaby requires at least one (1) deployment target.' +
+        '\nAborting.');
+    }
+
+    grunt.log.writeflags(target, 'deleting target');
+
+    if (dry) {
+      grunt.log.writeln('Stopping before deleting as requested.'.yellow);
+      return target;
+    }
+
+    delete project.targets[name];
+    saveProject(project);
+    return target;
+  };
+
 
   exports.defaultclientname = defaultclientname;
   exports.defaultclientdesc = defaultclientdesc;

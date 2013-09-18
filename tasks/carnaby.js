@@ -38,11 +38,11 @@ module.exports = function(grunt) {
     ['extensions', 'common/scripts/helpers/extensions.js'],
     ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
     // Config
-    ['requirebase', 'config/base.json'],
-    ['requireconfdev', 'config/dev.json'],
-    ['requireconfqa', 'config/qa.json'],
-    ['requireconfprod', 'config/prod.json'],
-    ['requireconflocal', 'config/local.json'],
+    // ['requirebase', 'config/base.json'],
+    // ['requireconfdev', 'config/dev.json'],
+    // ['requireconfqa', 'config/qa.json'],
+    // ['requireconfprod', 'config/prod.json'],
+    // ['requireconflocal', 'config/local.json'],
     // Templates
     ['hbs', 'templates/main-view.hbs'],
     // Style sheets
@@ -274,6 +274,66 @@ module.exports = function(grunt) {
   //--------------------------------------------------------------------------
 
   /*
+   * carnaby:ls[:property] A proxy for grunt.log.writeflags
+   */
+  grunt.registerTask('carnaby:ls', function () {
+    var args = helpers.removeFlags(this.args);
+    var project = helpers.readProject();
+    var prop = args.shift();
+    var msg = 'carnaby';
+    var obj = project[prop];
+
+    if (prop && obj) {
+      msg += ':' + prop;
+    }
+
+    if (!obj && prop) {
+      grunt.log.writeln(('"' + prop + '" field not found. Listing the whole project.').yellow);
+    }
+
+    if (!obj) {
+      obj = project;
+    }
+
+    grunt.log.writeflags(obj, msg);
+  });
+
+  /*
+   * carnaby:new-target:name:path[:description][:force] Writes the required
+   *  files to enable a new deployment target and updates the project
+   *  accordingly.
+   *  :path is relative to the grunt's project root.
+   */
+  grunt.registerTask('carnaby:new-target', function () {
+    var args = helpers.removeFlags(this.args);
+    var force = this.flags.force;
+    var name = args.shift();
+    var pathName = args.shift();
+    var desc = args.shift();
+    if (!name) {
+      grunt.fatal('You must provide a target name. Aborting.');
+    }
+    if (!pathName) {
+      pathName = name;
+      grunt.log.writeln(('Target path not specified. Will try to use "' + path.resolve(pathName) +'".').yellow);
+    }
+    helpers.createTarget(name, pathName, desc, force);
+  });
+
+  /*
+   * carnaby:delete-target:name[:dry-run] Deletes an existing deployment target.
+   *  :dry-run outputs the results of this operation without actually deleting
+   *  anything.
+   */
+  grunt.registerTask('carnaby:delete-target', function () {
+    var args = helpers.removeFlags(this.args);
+    var dry = this.flags['dry-run'];
+    var name = args.shift();
+    var target = helpers.deleteTarget(name, dry);
+    grunt.log.writeflags(target);
+  });
+
+  /*
    * carnaby:vendor-cherry-pick:vendor:file[:file_n][:force] Cherry picks files from a given
    * vendor and makes them part of the common code under version control
    */
@@ -335,7 +395,8 @@ module.exports = function(grunt) {
     clientTasks = [].concat(
       'carnaby:update-config',
       clientTasks,
-      'carnaby:write-main:' + client.name + ':' + target
+      'carnaby:write-main:' + client.name + ':' + target,
+      'carnaby:update-index'
     );
     grunt.verbose.writeflags(clientTasks, 'client tasks');
     grunt.task.run(clientTasks);
@@ -439,14 +500,6 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
-
-
-    // wip, see: https://trello.com/c/voW4ddEK
-    // processTemplate({
-    //   force: force,
-    //   filepath: 'index.html',
-    //   template: 'html'
-    // });
 
     var vendorCherryPick =
       ['carnaby', 'vendor-cherry-pick', 'html5-boilerplate']
