@@ -204,10 +204,11 @@ exports.init = function (grunt) {
     targets[name] = {
       name: name,
       path: pathName,
-      description: description
+      description: description || ''
     };
 
     saveProject(project);
+    return targets[name];
   };
 
   exports.deleteTarget = function (name, dry) {

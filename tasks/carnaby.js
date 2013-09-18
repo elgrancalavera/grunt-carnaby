@@ -32,33 +32,21 @@ module.exports = function(grunt) {
   // [template, destination] destination relative to base path (added later)
 
   var commonTemplates = [
-    // Common
     ['mainapp', 'common/scripts/app.js'],
     ['appcontroller', 'common/scripts/controllers/app-controller.js'],
     ['extensions', 'common/scripts/helpers/extensions.js'],
     ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
-    // Config
-    // ['requirebase', 'config/base.json'],
-    // ['requireconfdev', 'config/dev.json'],
-    // ['requireconfqa', 'config/qa.json'],
-    // ['requireconfprod', 'config/prod.json'],
-    // ['requireconflocal', 'config/local.json'],
-    // Templates
     ['hbs', 'templates/main-view.hbs'],
-    // Style sheets
     ['commonstylesheet', 'common/styles/_common.scss'],
+    ['requirebase', 'config/base.json'],
   ];
 
   var clientTemplates = [
     ['app', 'scripts/app.js'],
-    ['requireconf', 'config/base.json'],
-    ['requireconfdev', 'config/dev.json'],
-    ['requireconfqa', 'config/qa.json'],
-    ['requireconfprod', 'config/prod.json'],
-    ['requireconflocal', 'config/local.json'],
     ['index', 'index.html'],
     ['hbs', 'templates/client-main-view.hbs'],
-    ['clientstylesheet', 'styles/main.scss']
+    ['clientstylesheet', 'styles/main.scss'],
+    ['requiretarget', 'config/local.json'],
   ];
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
@@ -86,7 +74,8 @@ module.exports = function(grunt) {
       force: force,
       client: client,
       context: {
-        client: client
+        client: client,
+        target: 'local'
       }
     };
     var templates = makeTemplateOptionsList(clientTemplates, name, options);
@@ -149,27 +138,6 @@ module.exports = function(grunt) {
       '<%= carnaby.appDir %>/core/config/local.json',
       path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
       path.join('<%= carnaby.appDir %>', client.name, 'config/local.json')
-    ];
-
-    files[path.join(dest, 'dev.json')] = [
-      '<%= carnaby.appDir %>/core/config/base.json',
-      '<%= carnaby.appDir %>/core/config/dev.json',
-      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
-      path.join('<%= carnaby.appDir %>', client.name, 'config/dev.json')
-    ];
-
-    files[path.join(dest, 'qa.json')] = [
-      '<%= carnaby.appDir %>/core/config/base.json',
-      '<%= carnaby.appDir %>/core/config/qa.json',
-      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
-      path.join('<%= carnaby.appDir %>', client.name, 'config/qa.json')
-    ];
-
-    files[path.join(dest, 'prod.json')] = [
-      '<%= carnaby.appDir %>/core/config/base.json',
-      '<%= carnaby.appDir %>/core/config/prod.json',
-      path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
-      path.join('<%= carnaby.appDir %>', client.name, 'config/prod.json')
     ];
 
     project.tasks.extend[client.name] = {
@@ -317,7 +285,10 @@ module.exports = function(grunt) {
       pathName = name;
       grunt.log.writeln(('Target path not specified. Will try to use "' + path.resolve(pathName) +'".').yellow);
     }
-    helpers.createTarget(name, pathName, desc, force);
+    var target = helpers.createTarget(name, pathName, desc, force);
+    grunt.verbose.writeflags(target, 'new target created');
+
+    // write all target json files
   });
 
   /*

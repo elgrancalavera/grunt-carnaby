@@ -1,8 +1,0 @@
-{
-    "config": {
-        "app": {
-          "env": "local",
-          "debug": "true"
-        }
-    }
-}
