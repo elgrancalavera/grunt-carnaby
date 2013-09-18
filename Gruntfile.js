@@ -116,7 +116,9 @@ module.exports = function(grunt) {
     },
 
     // Before generating any new files, remove any files created previously.
-    clean: ['tmp/*', '.carnaby/*', 'dist'],
+    clean: {
+      all: ['tmp/*', '.carnaby/*', 'dist']
+    },
 
     // Unit tests.
     nodeunit: {

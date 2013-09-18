@@ -63,6 +63,8 @@ module.exports = function(grunt) {
     var options = {
       force: force
     };
+    var defaultTarget = helpers.defaulttargetname;
+    helpers.createTarget(defaultTarget, defaultTarget, '', force);
     grunt.verbose.writeflags(options, 'makeCommon options');
     var templates = makeTemplateOptionsList(commonTemplates, 'core', options);
     processMultipleTemplates(templates);
@@ -78,12 +80,24 @@ module.exports = function(grunt) {
         target: 'local'
       }
     };
+
+    // add templates for any alredy known deployment target here
+    var targets = helpers.readProject().targets;
+
+    grunt.util._.each(targets, function (o, target) {
+      processTemplate({
+        context: {target: target},
+        template: 'requiretarget',
+        filepath: path.join(name, 'config', target + '.json')
+      });
+    });
+
     var templates = makeTemplateOptionsList(clientTemplates, name, options);
     processMultipleTemplates(templates);
-    makeClientTasks(client);
+    _updateClientTasks(client);
   };
 
-  var makeClientTasks = function (client) {
+  var _updateClientTasks = function (client) {
     var project = helpers.readProject();
     var dest, files, base;
 
@@ -139,6 +153,16 @@ module.exports = function(grunt) {
       path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
       path.join('<%= carnaby.appDir %>', client.name, 'config/local.json')
     ];
+
+    // then for each target ...
+    var targets = helpers.readProject().targets;
+    grunt.util._.each(targets, function (target, targetName) {
+      files[path.join(dest, targetName + '.json')] = [
+        '<%= carnaby.appDir %>/core/config/base.json',
+        path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
+        path.join('<%= carnaby.appDir %>', client.name, 'config', targetName + '.json'),
+      ];
+    });
 
     project.tasks.extend[client.name] = {
       options: {
@@ -286,9 +310,28 @@ module.exports = function(grunt) {
       grunt.log.writeln(('Target path not specified. Will try to use "' + path.resolve(pathName) +'".').yellow);
     }
     var target = helpers.createTarget(name, pathName, desc, force);
+
+    // change this to use grunt.util._.keys(clients) instead...
+    var clients = helpers.readProject().clients;
+    var templateList = [['requiretarget', path.join('config', name + '.json')]];
+    var templateOptions = {
+      context: { target: name },
+      force: force
+    };
+    var coreTemplates = makeTemplateOptionsList(templateList, 'core', templateOptions);
+    var templates = grunt.util._.reduce(clients, function (templates, client, key) {
+      return templates.concat(makeTemplateOptionsList(templateList, key, templateOptions));
+    }, coreTemplates);
+
+    processMultipleTemplates(templates);
     grunt.verbose.writeflags(target, 'new target created');
 
-    // write all target json files
+    // then we need to update some of the clients tasks... and since there is
+    // no other way to do it yet, I'm just updating the whole lot again.
+    grunt.util._.each(clients, _updateClientTasks);
+    grunt.task.run(['carnaby:update-config', 'extend']);
+
+    grunt.log.ok();
   });
 
   /*
@@ -301,7 +344,25 @@ module.exports = function(grunt) {
     var dry = this.flags['dry-run'];
     var name = args.shift();
     var target = helpers.deleteTarget(name, dry);
-    grunt.log.writeflags(target);
+    var clients = helpers.readProject().clients;
+
+    var files = grunt.util._.reduce(clients, function (files, client) {
+      return files.concat(client.root);
+    }, [path.join(helpers.appDir, 'core')]).map(function (file) {
+      return path.join(file, 'config', name + '.json');
+    });
+
+    grunt.log.writeflags(files, 'deleting files');
+
+    if (dry) {
+      return grunt.log.writeln('Stopping before deleting files are requested.'.yellow);
+    }
+
+    var taskid = helpers.utid('clean');
+    grunt.config(taskid.property, files);
+    grunt.log.writeflags(grunt.config('clean'), 'clean');
+    grunt.task.run(taskid.task);
+
   });
 
   /*
@@ -463,7 +524,9 @@ module.exports = function(grunt) {
     var desc = args[1] || helpers.defaultclientdesc;
     var force = this.flags.force;
     makeClient(name, desc, force);
-    grunt.task.run(helpers.checkForce(['carnaby:update-client:' + name], force));
+    grunt.task.run(helpers.checkForce([
+      'carnaby:update-client:' + name,
+    ], force));
   });
 
   /*
@@ -472,16 +535,17 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
 
+
     var vendorCherryPick =
       ['carnaby', 'vendor-cherry-pick', 'html5-boilerplate']
       .concat(html5bp).join(':');
+
+    makeCommon(force);
 
     grunt.task.run(helpers.checkForce([
       'carnaby:new-client',
       vendorCherryPick
     ], force));
-
-    makeCommon(force);
 
   });
 };

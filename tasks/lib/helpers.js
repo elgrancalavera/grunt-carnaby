@@ -224,7 +224,7 @@ exports.init = function (grunt) {
     grunt.log.writeflags(target, 'deleting target');
 
     if (dry) {
-      grunt.log.writeln('Stopping before deleting as requested.'.yellow);
+      grunt.log.writeln('Stopping before saving changes to project.json as requested.'.yellow);
       return target;
     }
 
@@ -233,9 +233,24 @@ exports.init = function (grunt) {
     return target;
   };
 
+  var uid = exports.uid = function () {
+    return '_' + Date.now();
+  };
+
+  exports.utid = function (task) {
+    if (!task) {
+      grunt.fatal('We need a task to make a task uid.');
+    }
+    var id = [task, task + uid()];
+    return {
+      property: id.join('.'),
+      task: id.join(':')
+    };
+  };
 
   exports.defaultclientname = defaultclientname;
   exports.defaultclientdesc = defaultclientdesc;
+  exports.defaulttargetname = defaulttargetname;
   exports.appDir = appDir;
   exports.bowerDir = bowerDir;
 
