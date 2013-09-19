@@ -13,21 +13,6 @@ var fs = require('fs');
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var hbsOptions = require('./lib/handlebars-options').init(grunt);
-  var html5bpCherryPick = [
-    '404.html',
-    'apple*',
-    'favicon.ico',
-    'humans.txt',
-    'robots.txt'
-  ];
-
-  // tasks that we need to run every time we update a client.
-  var updateClientTasks = [
-    'copy',
-    'handlebars',
-    'extend',
-    'compass'
-  ];
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
     return grunt.util._.map(templatelist, function (args) {
@@ -38,7 +23,8 @@ module.exports = function(grunt) {
     });
   };
 
-  var _updateClientTasks = function (client) {
+  var updateTasks = function (client) {
+
     var project = helpers.readProject();
     var dest, files, base;
 
@@ -146,19 +132,16 @@ module.exports = function(grunt) {
   };
 
   var processTemplate = function (options) {
-    grunt.verbose.writeflags(options, 'processing template');
+
     var before = options.before || grunt.util._.identity;
     var base = options.base || helpers.appDir;
-    grunt.log.debug(base);
     var dest = path.join(base, options.filepath);
-    helpers.checkFile(dest, options.force);
-
     var extname = path.extname(options.filepath);
     var filename = path.basename(options.filepath);
     var filenamenoext = path.basename(options.filepath, extname);
     var dirname = path.dirname(options.filepath);
     var filepathnoext = path.join(dirname, filenamenoext);
-    var template = before(helpers.getTemplate(options.template));
+    var template = before(helpers.readTemplate(options.template));
 
     var context = grunt.util._.extend(options.context || {}, {
       filename: filename,
@@ -171,22 +154,22 @@ module.exports = function(grunt) {
 
     grunt.verbose.writeflags(options, 'Options');
     grunt.verbose.writeflags(context, 'Context');
-    helpers.writeTemplate(dest, template, context);
 
+    // show-stopper party-pooper
+    helpers.checkFile(dest, options.force);
+    helpers.writeTemplate(dest, template, context);
   };
 
   var getTemplateOptions = function (task) {
-    grunt.verbose.writeflags(task, 'Getting template options from');
     var args = helpers.removeFlags(task.args);
     if (args.length !== 2) {
-      return helpers.usage(true);
+      grunt.fatal('');
     }
     var options = {
       filepath: path.normalize(grunt.util._.last(args)),
       template: grunt.util._.first(args),
       force: task.flags.force
     };
-    grunt.verbose.writeflags(options, 'Template options');
     return options;
   };
 
@@ -259,7 +242,7 @@ module.exports = function(grunt) {
 
     // then we need to update some of the clients tasks... and since there is
     // no other way to do it yet, I'm just updating the whole lot again.
-    grunt.util._.each(clients, _updateClientTasks);
+    grunt.util._.each(clients, updateTasks);
     grunt.task.run(['carnaby:update-config', 'extend']);
 
     grunt.log.ok();
@@ -354,15 +337,20 @@ module.exports = function(grunt) {
     var target = args.shift();
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
-    var clientTasks = grunt.util._.map(updateClientTasks, function (task) {
-      return task + ':' + client.name;
-    });
-    clientTasks = [].concat(
+    var clientTasks = [].concat(
       'carnaby:update-config',
-      clientTasks,
+      [
+        'copy',
+        'handlebars',
+        'extend',
+        'compass'
+      ].map(function (task) {
+        return task + ':' + client.name;
+      }),
       'carnaby:write-main:' + client.name + ':' + target.name,
       'carnaby:update-index'
     );
+    grunt.log.writeflags(clientTasks);
     grunt.verbose.writeflags(clientTasks, 'client tasks');
     grunt.task.run(clientTasks);
   });
@@ -504,7 +492,7 @@ module.exports = function(grunt) {
     // this bit actually writes tasks to the project file. maybe it should be
     // handled in a separate file, specialised to write tasks and update
     // `grunt.config()`
-    _updateClientTasks(client);
+    updateTasks(client);
 
     // Step 4: Update all artifacts for this client
     grunt.task.run(helpers.checkForce([
@@ -542,12 +530,17 @@ module.exports = function(grunt) {
 
     // Step 2: Run all other tasks that depend on a well defined project
     // to work properly.
-    var vendorCherryPick =
-      ['carnaby', 'vendor-cherry-pick', 'html5-boilerplate']
-      .concat(html5bpCherryPick).join(':');
+    var cherryPick = [
+      'carnaby:vendor-cherry-pick:html5-boilerplate',
+      '404.html',
+      'apple*',
+      'favicon.ico',
+      'humans.txt',
+      'robots.txt',
+    ].join(':');
 
     grunt.task.run(helpers.checkForce([
-      vendorCherryPick,
+      cherryPick,
       'carnaby:new-client',
     ], force));
 

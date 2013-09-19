@@ -12,6 +12,7 @@ var templates = require('./templates');
 
 exports.init = function (grunt) {
 
+  var exports = {};
   var config = grunt.config('carnaby');
   var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
   var targetDir = grunt.config('carnaby.targetDir') || grunt.config('carnaby.targetDir', '.');
@@ -21,45 +22,21 @@ exports.init = function (grunt) {
   var defaultclientname = 'mobile';
   var defaulttargetname = 'local';
   var defaultclientdesc = 'Another Carnaby client';
-
-  var exports = {};
-  // flags (to be removed before doing stuff with the positional arguments):
+  var abortmsg = ' Aborting.\nAppend ":force" at the end of your task call to overwrite.';
+  var overwritemsg = 'Overwriting.';
+  // flags (to be removed before using the positional arguments):
   var flags = [
     'force',
     'dry-run'
   ];
 
-  var abortmsg = ' Aborting.\nAppend ":force" at the end of your task call to overwrite.';
-  var overwritemsg = 'Overwriting.';
-
-  //--------------------------------------------------------------------------
-  //
-  // Helpers
-  //
-  //--------------------------------------------------------------------------
-
-  var makeReader = function (reader, basedir) {
-    return function (filepath) {
-      var p = path.join(filesdir, basedir, filepath);
-      return reader.call(grunt, p);
-    };
-  };
-
-  var makeFileReader = function (basedir) {
-    return makeReader(grunt.file.read, basedir);
-  };
-
-  var readTxt = makeFileReader('txt');
-  var readTemplate = makeFileReader('templates');
-  var readJSON = makeReader(grunt.file.readJSON, 'json');
-
-  var getTemplate = function (name) {
+  var readTemplate = exports.readTemplate = function (name) {
     var definition = templates[name];
     if (!definition) {
       grunt.fatal('Unknown template definition: "' + name + '"');
     }
     return grunt.util._.reduce(definition, function (txt, filepath) {
-      return txt + readTemplate(filepath);
+      return txt + grunt.file.read(path.join(filesdir, 'templates', filepath));
     }, '');
   };
 
@@ -75,23 +52,8 @@ exports.init = function (grunt) {
     return readProject();
   };
 
-  //--------------------------------------------------------------------------
-  //
-  // Exported stuff
-  //
-  //--------------------------------------------------------------------------
-
-  exports.usage = function (fatal) {
-    grunt.log.writeln(readTxt('usage.txt').cyan);
-    grunt.fatal('Unable to contine.');
-  };
-
   var readPackage = exports.readPackage = function () {
     return grunt.file.readJSON('package.json');
-  };
-
-  exports.getTemplate = function (name) {
-    return getTemplate(name || 'def');
   };
 
   var checkFile = exports.checkFile = function (filepath, force) {
@@ -122,7 +84,7 @@ exports.init = function (grunt) {
 
   exports.createProject = function (force) {
     checkFile(projectfile, force);
-    writeTemplate(projectfile, getTemplate('project'));
+    writeTemplate(projectfile, readTemplate('project'));
     createTarget(defaulttargetname, defaulttargetname, '', force);
     var project = readProject();
     grunt.verbose.writeflags(project, 'new project');
