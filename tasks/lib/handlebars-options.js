@@ -10,7 +10,7 @@
 
 exports.init = function (grunt) {
 
-  var pathOffset = grunt.config('carnaby.hbsPathOffset') || 4;
+  var pathOffset = 4;
 
   var handlebarsFilePath = function (filepath) {
     // The first n indices we need to skipt to reach the actual
@@ -26,7 +26,7 @@ exports.init = function (grunt) {
     return handlebarsFilePath(filepath).replace('_', '');
   };
 
-  var handlebarsOptions = function (options) {
+  return function (options) {
     options = options || {};
     options.namespace = options.namespace || 'jst';
     options.processName = handlebarsProcessName;
@@ -37,5 +37,4 @@ exports.init = function (grunt) {
     return options;
   };
 
-  return handlebarsOptions;
 };

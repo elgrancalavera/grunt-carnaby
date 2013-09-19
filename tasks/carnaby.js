@@ -12,7 +12,7 @@ var fs = require('fs');
 
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
-  var hbsOptions = require('./lib/handlebars-options').init(grunt);
+  var handlebarsOptions = require('./lib/handlebars-options').init(grunt);
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
     return grunt.util._.map(templatelist, function (args) {
@@ -361,7 +361,11 @@ module.exports = function(grunt) {
    * will be out of date again.
    */
   grunt.registerTask('carnaby:update-config', function () {
-    var tasks = helpers.readProject().tasks;
+    var project = helpers.readProject();
+    var tasks = project.tasks;
+    var clients = project.clients;
+
+    // Iterate over tasks first
     grunt.util._.each(tasks, function (clients, task) {
       grunt.verbose.writeflags(clients, task);
       grunt.util._.each(clients, function (config, client) {
@@ -371,6 +375,15 @@ module.exports = function(grunt) {
         grunt.verbose.writeflags(grunt.config(target), target);
 
       });
+    });
+
+    // Then iterate over clients and add the remaining task specific bits
+    grunt.util._.each(clients, function (client) {
+      // manually set the handlebars options for each client, b/c
+      // handlebars options are generated with a function, which can't be
+      // saved in the projec.json file
+      var property = ['handlebars', client.name, 'options'].join('.');
+      grunt.config(property, handlebarsOptions());
     });
   });
 
