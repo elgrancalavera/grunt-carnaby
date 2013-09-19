@@ -268,6 +268,7 @@ module.exports = function(grunt) {
     }, [path.join(helpers.appDir, 'core')]).map(function (file) {
       return path.join(file, 'config', name + '.json');
     });
+    files.push(target.path);
 
     grunt.log.writeflags(files, 'deleting files');
 
@@ -579,9 +580,7 @@ module.exports = function(grunt) {
         dest: path.join(stylesdir, '_base.scss')
       }]
     });
-    helpers.lookdown();
-    grunt.log.writeflags(grunt.config(copyreset.property));
-    helpers.lookup();
+
     grunt.config(cleancss.property, [ cssdir ]);
 
     grunt.task.run(helpers.checkForce([
