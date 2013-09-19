@@ -27,7 +27,8 @@ exports.init = function (grunt) {
   // flags (to be removed before using the positional arguments):
   var flags = [
     'force',
-    'dry-run'
+    'dry-run',
+    'all'
   ];
 
   var readTemplate = exports.readTemplate = function (name) {
@@ -205,11 +206,17 @@ exports.init = function (grunt) {
     };
   };
 
+  exports.run = function () {
+    var description = ['carnaby'].concat(grunt.util.toArray(arguments));
+    grunt.verbose.writeflags(description, 'runtask');
+    return description.join(':');
+  };
+
   var look = function (what, color) {
     grunt.verbose.writeln(what[color || 'yellow']);
   };
 
-  exports.lookdown = function (color) {
+  var lookdown = exports.lookdown = function (color) {
     var arrow = "\n" +
       "    .\n" +
       "      .\n" +
@@ -229,7 +236,7 @@ exports.init = function (grunt) {
     look(arrow, color);
   };
 
-  exports.lookup = function (color) {
+  var lookup = exports.lookup = function (color) {
     var arrow = "\n" +
       "    .\n" +
       "  .:;:.\n" +

@@ -275,11 +275,17 @@ module.exports = function(grunt) {
       return grunt.log.writeln('Stopping before deleting files are requested.'.yellow);
     }
 
-    var taskid = helpers.utid('clean');
-    grunt.config(taskid.property, files);
+    var cleantarget = helpers.utid('clean');
+    grunt.config(cleantarget.property, files);
     grunt.log.writeflags(grunt.config('clean'), 'clean');
-    grunt.task.run(taskid.task);
+    grunt.task.run(cleantarget.task);
 
+    // then we need to update some of the clients tasks... and since there is
+    // no other way to do it yet, I'm just updating the whole lot again.
+    grunt.util._.each(clients, updateTasks);
+    grunt.task.run(['carnaby:update-config', 'extend']);
+
+    grunt.log.ok();
   });
 
   /*
@@ -411,31 +417,29 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby:write-main', function () {
     this.requires(['carnaby:update-config']);
-
     var args = helpers.removeFlags(this.args);
     var client = args.shift() || helpers.defaultclientname;
     var target = args.shift() || helpers.defaulttargetname;
-
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
-
-    var source = path.join('.carnaby/tmp', client.name, 'config', target.name + '.json');
-
-    var context = {
-      config: grunt.file.read(source)
-    };
-
-    var base = target.name === helpers.defaulttargetname ?
-      '.carnaby/tmp' : target.path;
-
-    processTemplate({
+    var options = {
       filepath: path.join(client.name, 'scripts/main.js'),
       template: 'main',
       force: true,
-      context: context,
-      base: base
-    });
+      context: {
+        config: grunt.file.read(path.join('.carnaby/tmp', client.name, 'config', target.name + '.json'))
+      },
+      base: target.path
+    };
+    processTemplate(options);
 
+    // if the target is the default target, we assume the user is a front end
+    // dev working on her local copy of the project, and we spit out another
+    // copy of main.js in the connect's artifacts directory for convenience
+    if (target.name === helpers.defaulttargetname) {
+      options.base = '.carnaby/tmp';
+      processTemplate(options);
+    }
   });
 
   /*
@@ -478,6 +482,8 @@ module.exports = function(grunt) {
         ['index', 'index.html'],
         ['hbssidebar', 'templates/sidebar.hbs'],
         ['hbsclient', 'templates/content.hbs'],
+        ['blankstylesheet', 'styles/variables.scss'],
+        ['blankstylesheet', 'styles/mixins.scss'],
         ['clientstylesheet', 'styles/main.scss'],
         ['requiretarget', 'config/base.json'],
       ],
@@ -533,7 +539,9 @@ module.exports = function(grunt) {
         ['extensions', 'common/scripts/helpers/extensions.js'],
         ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
         ['hbssidebar', 'templates/sidebar.hbs'],
-        ['commonstylesheet', 'common/styles/_common.scss'],
+        ['commonstylesheet', 'common/styles/_common-styles.scss'],
+        ['blankstylesheet', 'common/styles/_common-variables.scss'],
+        ['blankstylesheet', 'common/styles/_common-mixins.scss'],
         ['requirebase', 'config/base.json'],
       ],
       // base path (relative to helpers.appDir)
@@ -554,12 +562,59 @@ module.exports = function(grunt) {
       'favicon.ico',
       'humans.txt',
       'robots.txt',
+      'css/normalize.css',
+      'css/main.css'
     ].join(':');
+
+    var copyreset = helpers.utid('copy');
+    var cleancss = helpers.utid('clean');
+    var cssdir = path.join(helpers.appDir, 'core/css');
+    var stylesdir = path.join(helpers.appDir, 'core/common/styles');
+    grunt.config(copyreset.property, {
+      files: [{
+        src: path.join(cssdir, 'normalize.css'),
+        dest: path.join(stylesdir, '_normalize.scss')
+      }, {
+        src: path.join(cssdir, 'main.css'),
+        dest: path.join(stylesdir, '_base.scss')
+      }]
+    });
+    helpers.lookdown();
+    grunt.log.writeflags(grunt.config(copyreset.property));
+    helpers.lookup();
+    grunt.config(cleancss.property, [ cssdir ]);
 
     grunt.task.run(helpers.checkForce([
       cherryPick,
+      copyreset.task,
+      cleancss.task,
       'carnaby:new-client',
     ], force));
 
   });
+
+  /*
+   * grunt:carnaby:build[:client][:target] Builds one client for one target
+   *  defaults to grunt:carnaby:build:mobile:local
+   */
+  grunt.registerTask('carnaby:build', function () {
+    var args = helpers.removeFlags(this.args);
+    var client = args.shift() || helpers.defaultclientname;
+    var target = args.shift() || helpers.defaulttargetname;
+    client = helpers.readClient(client);
+    target = helpers.readTarget(target);
+    grunt.verbose.writeflags(client, 'client');
+    grunt.verbose.writeflags(target, 'target');
+
+    // Update the client first
+    grunt.task.run([
+      helpers.run('update-client', client.name, target.name),
+      helpers.run('write-main', client.name, target.name)
+    ]);
+
+  });
+
+  /*
+   * grunt:carnaby:build:all Builds all clients for all targets
+   */
 };

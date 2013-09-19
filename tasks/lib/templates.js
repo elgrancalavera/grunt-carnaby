@@ -179,3 +179,8 @@ exports.clientstylesheet = [
   'js/header.js',
   'scss/client.scss'
 ];
+
+exports.blankstylesheet = [
+  // just because they look the same...
+  'js/header.js',
+];

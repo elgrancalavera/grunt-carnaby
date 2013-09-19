@@ -29,7 +29,8 @@ module.exports = function(grunt) {
 
     carnaby: {
       appDir: 'tmp',
-      bowerDir: grunt.file.readJSON('.bowerrc').directory
+      bowerDir: grunt.file.readJSON('.bowerrc').directory,
+      targetDir: 'targets'
     },
 
     //--------------------------------------------------------------------------
@@ -117,7 +118,7 @@ module.exports = function(grunt) {
 
     // Before generating any new files, remove any files created previously.
     clean: {
-      all: ['tmp/*', '.carnaby/*', 'dist']
+      all: ['tmp/*', '.carnaby/*', 'targets']
     },
 
     // Unit tests.
