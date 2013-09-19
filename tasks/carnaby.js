@@ -13,7 +13,7 @@ var fs = require('fs');
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var hbsOptions = require('./lib/handlebars-options').init(grunt);
-  var html5bp = [
+  var html5bpCherryPick = [
     '404.html',
     'apple*',
     'favicon.ico',
@@ -29,26 +29,6 @@ module.exports = function(grunt) {
     'compass'
   ];
 
-  // [template, destination] destination relative to base path (added later)
-
-  var commonTemplates = [
-    ['mainapp', 'common/scripts/app.js'],
-    ['appcontroller', 'common/scripts/controllers/app-controller.js'],
-    ['extensions', 'common/scripts/helpers/extensions.js'],
-    ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
-    ['hbs', 'templates/main-view.hbs'],
-    ['commonstylesheet', 'common/styles/_common.scss'],
-    ['requirebase', 'config/base.json'],
-  ];
-
-  var clientTemplates = [
-    ['app', 'scripts/app.js'],
-    ['index', 'index.html'],
-    ['hbs', 'templates/client-main-view.hbs'],
-    ['clientstylesheet', 'styles/main.scss'],
-    ['requiretarget', 'config/local.json'],
-  ];
-
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
     return grunt.util._.map(templatelist, function (args) {
       return grunt.util._.extend({
@@ -56,45 +36,6 @@ module.exports = function(grunt) {
         filepath: path.join(basepath, args[1])
       }, options);
     });
-  };
-
-  var makeCommon = function (force) {
-    var project = helpers.createProject(force).readProject();
-    var options = {
-      force: force
-    };
-    var defaultTarget = helpers.defaulttargetname;
-    helpers.createTarget(defaultTarget, defaultTarget, '', force);
-    grunt.verbose.writeflags(options, 'makeCommon options');
-    var templates = makeTemplateOptionsList(commonTemplates, 'core', options);
-    processMultipleTemplates(templates);
-  };
-
-  var makeClient = function (name, description, force) {
-    var client = helpers.createClient(name, description, force).readClient(name);
-    var options = {
-      force: force,
-      client: client,
-      context: {
-        client: client,
-        target: 'local'
-      }
-    };
-
-    // add templates for any alredy known deployment target here
-    var targets = helpers.readProject().targets;
-
-    grunt.util._.each(targets, function (o, target) {
-      processTemplate({
-        context: {target: target},
-        template: 'requiretarget',
-        filepath: path.join(name, 'config', target + '.json')
-      });
-    });
-
-    var templates = makeTemplateOptionsList(clientTemplates, name, options);
-    processMultipleTemplates(templates);
-    _updateClientTasks(client);
   };
 
   var _updateClientTasks = function (client) {
@@ -205,11 +146,7 @@ module.exports = function(grunt) {
   };
 
   var processTemplate = function (options) {
-
-    grunt.log.debug('Processing template');
-    grunt.log.debug(options.template);
-    grunt.log.debug(options.filepath);
-
+    grunt.verbose.writeflags(options, 'processing template');
     var before = options.before || grunt.util._.identity;
     var base = options.base || helpers.appDir;
     grunt.log.debug(base);
@@ -236,12 +173,6 @@ module.exports = function(grunt) {
     grunt.verbose.writeflags(context, 'Context');
     helpers.writeTemplate(dest, template, context);
 
-  };
-
-  var processMultipleTemplates = function (optionsList) {
-    grunt.util._.each(optionsList, function (options) {
-      processTemplate(options);
-    });
   };
 
   var getTemplateOptions = function (task) {
@@ -307,7 +238,7 @@ module.exports = function(grunt) {
     }
     if (!pathName) {
       pathName = name;
-      grunt.log.writeln(('Target path not specified. Will try to use "' + path.resolve(pathName) +'".').yellow);
+      grunt.log.writeln(('Target path not specified. Will try to use "' + path.resolve(helpers.targetDir, pathName) +'".').yellow);
     }
     var target = helpers.createTarget(name, pathName, desc, force);
 
@@ -323,7 +254,7 @@ module.exports = function(grunt) {
       return templates.concat(makeTemplateOptionsList(templateList, key, templateOptions));
     }, coreTemplates);
 
-    processMultipleTemplates(templates);
+    grunt.util._.each(templates, processTemplate);
     grunt.verbose.writeflags(target, 'new target created');
 
     // then we need to update some of the clients tasks... and since there is
@@ -403,7 +334,7 @@ module.exports = function(grunt) {
     }, []);
 
     grunt.verbose.writeln('vendor: %s', vendor);
-    grunt.verbose.writeflags(cherryPicks, 'cherryPicks');
+    grunt.verbose.writeflags(cherryPicks, 'cherry picks');
 
     cherryPicks.forEach(function (src) {
       var dest = path.join(helpers.appDir, 'core', path.relative(vendorDir, src));
@@ -419,15 +350,17 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:update-client', function () {
     var force = this.flags.force;
     var args = helpers.removeFlags(this.args);
-    var client = helpers.readClient(args[0]);
-    var target = helpers.getTarget(args[1]);
+    var client = args.shift();
+    var target = args.shift();
+    client = helpers.readClient(client);
+    target = helpers.readTarget(target);
     var clientTasks = grunt.util._.map(updateClientTasks, function (task) {
       return task + ':' + client.name;
     });
     clientTasks = [].concat(
       'carnaby:update-config',
       clientTasks,
-      'carnaby:write-main:' + client.name + ':' + target,
+      'carnaby:write-main:' + client.name + ':' + target.name,
       'carnaby:update-index'
     );
     grunt.verbose.writeflags(clientTasks, 'client tasks');
@@ -475,22 +408,31 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby:write-main', function () {
     this.requires(['carnaby:update-config']);
+
     var args = helpers.removeFlags(this.args);
-    var targets = ['local', 'dev', 'qa', 'prod'];
-    var client = helpers.readClient(args[0]);
-    var target = helpers.getTarget(args[1]);
-    var source = path.join('.carnaby/tmp', client.name, 'config', target + '.json');
-    grunt.log.debug('config source:', source);
+    var client = args.shift() || helpers.defaultclientname;
+    var target = args.shift() || helpers.defaulttargetname;
+
+    client = helpers.readClient(client);
+    target = helpers.readTarget(target);
+
+    var source = path.join('.carnaby/tmp', client.name, 'config', target.name + '.json');
+
     var context = {
       config: grunt.file.read(source)
     };
+
+    var base = target.name === helpers.defaulttargetname ?
+      '.carnaby/tmp' : target.path;
+
     processTemplate({
       filepath: path.join(client.name, 'scripts/main.js'),
       template: 'main',
       force: true,
       context: context,
-      base: target === 'local' ? '.carnaby/tmp' : 'dist'
+      base: base
     });
+
   });
 
   /*
@@ -519,11 +461,52 @@ module.exports = function(grunt) {
    * defaults to carnaby:new-client:mobile
    */
   grunt.registerTask('carnaby:new-client', function () {
-    var args = helpers.removeFlags(this.args);
-    var name = args[0] || helpers.defaultclientname;
-    var desc = args[1] || helpers.defaultclientdesc;
     var force = this.flags.force;
-    makeClient(name, desc, force);
+    var args = helpers.removeFlags(this.args);
+    var name = args.shift() || helpers.defaultclientname;
+    var desc = args.shift() || helpers.defaultclientdesc;
+
+    // Step 1: Create the actual client entry in the project and all the client
+    // files derived from templates.
+    var client = helpers.createClient(name, desc, force);
+    var templates = makeTemplateOptionsList([
+        // [template, destination] destination relative to base path (added later)
+        ['app', 'scripts/app.js'],
+        ['index', 'index.html'],
+        ['hbs', 'templates/client-main-view.hbs'],
+        ['clientstylesheet', 'styles/main.scss'],
+        ['requiretarget', 'config/base.json'],
+      ],
+      // base path (relative to helpers.appDir)
+      client.name,
+      // options
+      {
+        force: force,
+        client: client,
+        context: {
+          client: client
+        }
+      }
+    );
+    grunt.util._.each(templates, processTemplate);
+
+    // Step 2: Once the client files are ready, add a blank configuration file
+    // for each target.
+    grunt.util._.each(helpers.readProject().targets, function (target) {
+      processTemplate({
+        context: {target: target.name},
+        template: 'requiretarget',
+        filepath: path.join(client.name, 'config', target.name + '.json')
+      });
+    });
+
+    // Step 3: Write all the tasks needed for this client to the project file
+    // this bit actually writes tasks to the project file. maybe it should be
+    // handled in a separate file, specialised to write tasks and update
+    // `grunt.config()`
+    _updateClientTasks(client);
+
+    // Step 4: Update all artifacts for this client
     grunt.task.run(helpers.checkForce([
       'carnaby:update-client:' + name,
     ], force));
@@ -535,16 +518,37 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
 
+    // Step 1: Create the actual project and all the project files
+    // derived from templates.
+    var project = helpers.createProject(force);
+    var templates = makeTemplateOptionsList([
+        // [template, destination] destination relative to base path
+        ['mainapp', 'common/scripts/app.js'],
+        ['appcontroller', 'common/scripts/controllers/app-controller.js'],
+        ['extensions', 'common/scripts/helpers/extensions.js'],
+        ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
+        ['hbs', 'templates/main-view.hbs'],
+        ['commonstylesheet', 'common/styles/_common.scss'],
+        ['requirebase', 'config/base.json'],
+      ],
+      // base path (relative to helpers.appDir)
+      'core',
+      // options
+      {
+        force: force
+      }
+    );
+    grunt.util._.each(templates, processTemplate);
 
+    // Step 2: Run all other tasks that depend on a well defined project
+    // to work properly.
     var vendorCherryPick =
       ['carnaby', 'vendor-cherry-pick', 'html5-boilerplate']
-      .concat(html5bp).join(':');
-
-    makeCommon(force);
+      .concat(html5bpCherryPick).join(':');
 
     grunt.task.run(helpers.checkForce([
+      vendorCherryPick,
       'carnaby:new-client',
-      vendorCherryPick
     ], force));
 
   });

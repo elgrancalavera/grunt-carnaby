@@ -156,6 +156,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('carnaby:workflow', [
+    'clean',
     'carnaby:new-project',
     'carnaby:new-client:bacon-sandwich'
   ]);

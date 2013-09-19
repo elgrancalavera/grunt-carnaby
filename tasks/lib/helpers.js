@@ -14,14 +14,16 @@ exports.init = function (grunt) {
 
   var config = grunt.config('carnaby');
   var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
+  var targetDir = grunt.config('carnaby.targetDir') || grunt.config('carnaby.targetDir', '.');
   var bowerDir = grunt.config('carnaby.bowerDir') || 'bower_components';
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
-  var defaulttargetname = 'production';
+  var defaulttargetname = 'local';
   var defaultclientdesc = 'Another Carnaby client';
+
   var exports = {};
-  // flags (to be removed before doing stuff):
+  // flags (to be removed before doing stuff with the positional arguments):
   var flags = [
     'force',
     'dry-run'
@@ -94,7 +96,7 @@ exports.init = function (grunt) {
 
   var checkFile = exports.checkFile = function (filepath, force) {
     var exists = grunt.file.exists(filepath);
-    grunt.verbose.writeln((filepath + 'already exists?').cyan, exists.toString().yellow);
+    grunt.verbose.writeln((filepath + ' already exists?').cyan, exists.toString().yellow);
     var existsMsg = '"' + filepath  + '" already exists. ';
     if (exists && !force) {
       grunt.fatal(existsMsg + abortmsg);
@@ -120,9 +122,11 @@ exports.init = function (grunt) {
 
   exports.createProject = function (force) {
     checkFile(projectfile, force);
-    var template = getTemplate('project');
-    writeTemplate(projectfile, template);
-    return exports;
+    writeTemplate(projectfile, getTemplate('project'));
+    createTarget(defaulttargetname, defaulttargetname, '', force);
+    var project = readProject();
+    grunt.verbose.writeflags(project, 'new project');
+    return project;
   };
 
   var createClient = exports.createClient = function (name, description, force) {
@@ -140,7 +144,7 @@ exports.init = function (grunt) {
       root: path.join(appDir, name)
     };
     project = saveProject(project);
-    return exports;
+    return project.clients[name];
   };
 
   var readClient = exports.readClient = function (name, lenient) {
@@ -166,22 +170,13 @@ exports.init = function (grunt) {
     return target;
   };
 
-  exports.getTarget = function (target) {
-    var knownTargets = ['local', 'dev', 'qa', 'prod'];
-    target = target || knownTargets[0];
-    if (!grunt.util._.contains(knownTargets, target)) {
-      grunt.fatal('Unknown build target:"' + target + '". Aborting');
-    }
-    return target;
-  };
-
   exports.ensureTask = function (project, taskname) {
     if (!project.tasks[taskname]) {
       project.tasks[taskname] = {};
     }
   };
 
-  exports.createTarget = function (name, pathName, description, force) {
+  var createTarget = exports.createTarget = function (name, pathName, description, force) {
     var project = readProject();
     var targets = project.targets;
     var existsmsg = 'Target "' + name + '" already exists. ';
@@ -203,7 +198,7 @@ exports.init = function (grunt) {
 
     targets[name] = {
       name: name,
-      path: pathName,
+      path: path.join(targetDir, pathName),
       description: description || ''
     };
 
@@ -248,11 +243,99 @@ exports.init = function (grunt) {
     };
   };
 
+  var look = function (what, color) {
+    grunt.verbose.writeln(what[color || 'yellow']);
+  };
+
+  exports.lookdown = function (color) {
+    var arrow = "\n" +
+      "    .\n" +
+      "      .\n" +
+      "  . ;.\n" +
+      "   .;\n" +
+      "    ;;.\n" +
+      "  ;.;;\n" +
+      "  ;;;;.\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "..;;;;;..\n" +
+      " ':::::'\n" +
+      "   ':`\n";
+    look(arrow, color);
+  };
+
+  exports.lookup = function (color) {
+    var arrow = "\n" +
+      "    .\n" +
+      "  .:;:.\n" +
+      ".:;;;;;:.\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "  ;;;;;\n" +
+      "  ;:;;;\n" +
+      "  : ;;;\n" +
+      "    ;:;\n" +
+      "  . :.;\n" +
+      "    . :\n" +
+      "  .   .\n" +
+      "     .\n";
+    look(arrow, color);
+  };
+
+  exports.unicorn = function (color) {
+    var u = "\n" +
+      "                                                    /\n" +
+      "                                                  .7\n" +
+      "                                       \\       , //\n" +
+      "                                       |\\.--._/|//\n" +
+      "                                      /\\ ) ) ).'/\n" +
+      "                                     /(  \\  // /\n" +
+      "                                    /(   J`((_/ \\\n" +
+      "                                   / ) | _\\     /\n" +
+      "                                  /|)  \\  eJ    L\n" +
+      "                                 |  \\ L \\   L   L\n" +
+      "                                /  \\  J  `. J   L\n" +
+      "                                |  )   L   \\/   \\\n" +
+      "                               /  \\    J   (\\   /\n" +
+      "             _....___         |  \\      \\   \\```\n" +
+      "      ,.._.-'        '''--...-||\\     -. \\   \\\n" +
+      "    .'.=.'                    `         `.\\ [ Y\n" +
+      "   /   /                                  \\]  J\n" +
+      "  Y / Y                                    Y   L\n" +
+      "  | | |          \\                         |   L\n" +
+      "  | | |           Y                        A  J\n" +
+      "  |   I           |                       /I\\ /\n" +
+      "  |    \\          I             \\        ( |]/|\n" +
+      "  J     \\         /._           /        -tI/ |\n" +
+      "   L     )       /   /'-------'J           `'-:.\n" +
+      "   J   .'      ,'  ,' ,     \\   `'-.__          \\\n" +
+      "    \\ T      ,'  ,'   )\\    /|        ';'---7   /\n" +
+      "     \\|    ,'L  Y...-' / _.' /         \\   /   /\n" +
+      "      J   Y  |  J    .'-'   /         ,--.(   /\n" +
+      "       L  |  J   L -'     .'         /  |    /\\\n" +
+      "       |  J.  L  J     .-;.-/       |    \\ .' /\n" +
+      "       J   L`-J   L____,.-'`        |  _.-'   |\n" +
+      "        L  J   L  J                  ``  J    |\n" +
+      "        J   L  |   L                     J    |\n" +
+      "         L  J  L    \\                    L    \\\n" +
+      "         |   L  ) _.'\\                    ) _.'\\\n" +
+      "         L    \\('`    \\                  ('`    \\\n" +
+      "          ) _.'\\`-....'                   `-....'\n" +
+      "         ('`    \\\n" +
+      "          `-.___/\n";
+    look(u, color || 'magenta');
+  };
+
   exports.defaultclientname = defaultclientname;
   exports.defaultclientdesc = defaultclientdesc;
   exports.defaulttargetname = defaulttargetname;
   exports.appDir = appDir;
   exports.bowerDir = bowerDir;
+  exports.targetDir = targetDir;
 
   return exports;
 };
