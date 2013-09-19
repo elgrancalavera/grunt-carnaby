@@ -8,6 +8,9 @@
         "handlebars": "../../common/scripts/helpers/handlebars-loader"
     },
     "shim": {
+        "templates": {
+            "exports": "jst"
+        },
         "underscore": {
             "exports": "_"
         },

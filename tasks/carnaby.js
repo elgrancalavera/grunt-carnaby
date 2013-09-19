@@ -15,6 +15,9 @@ module.exports = function(grunt) {
   var handlebarsOptions = require('./lib/handlebars-options').init(grunt);
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
+    grunt.log.writeflags(templatelist);
+    grunt.log.writeln(basepath);
+    grunt.log.writeflags(options);
     return grunt.util._.map(templatelist, function (args) {
       return grunt.util._.extend({
         template: args[0],
@@ -373,7 +376,6 @@ module.exports = function(grunt) {
         grunt.verbose.writeflags(config, client);
         grunt.config(target, config);
         grunt.verbose.writeflags(grunt.config(target), target);
-
       });
     });
 
@@ -474,7 +476,8 @@ module.exports = function(grunt) {
         // [template, destination] destination relative to base path (added later)
         ['app', 'scripts/app.js'],
         ['index', 'index.html'],
-        ['hbs', 'templates/client-main-view.hbs'],
+        ['hbssidebar', 'templates/sidebar.hbs'],
+        ['hbsclient', 'templates/content.hbs'],
         ['clientstylesheet', 'styles/main.scss'],
         ['requiretarget', 'config/base.json'],
       ],
@@ -489,6 +492,7 @@ module.exports = function(grunt) {
         }
       }
     );
+
     grunt.util._.each(templates, processTemplate);
 
     // Step 2: Once the client files are ready, add a blank configuration file
@@ -528,7 +532,7 @@ module.exports = function(grunt) {
         ['appcontroller', 'common/scripts/controllers/app-controller.js'],
         ['extensions', 'common/scripts/helpers/extensions.js'],
         ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
-        ['hbs', 'templates/main-view.hbs'],
+        ['hbssidebar', 'templates/sidebar.hbs'],
         ['commonstylesheet', 'common/styles/_common.scss'],
         ['requirebase', 'config/base.json'],
       ],

@@ -39,9 +39,17 @@ exports.project = [
 //----------------------------------
 
 exports.hbs = [
+  'hbs/header.hbs'
+];
+
+exports.hbssidebar = [
   'hbs/header.hbs',
-  'hbs/body.hbs',
-  'hbs/footer.hbs'
+  'hbs/sidebar.hbs',
+];
+
+exports.hbsclient = [
+  'hbs/header.hbs',
+  'hbs/client.hbs',
 ];
 
 //----------------------------------

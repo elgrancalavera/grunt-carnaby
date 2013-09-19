@@ -19,17 +19,30 @@
    * `common/app` before any other part of our code.
    */
   var appController = require('common/controllers/app-controller');
+  var app = appController.app;
+
+  /*
+   * Prepare the main region for the app.
+   */
+  app.addRegions({
+    content: '#content',
+    sidebar: '#sidebar'
+  });
 
   /*
    * Now we get a chance to add our own initializers and event handlers to
    * `common/app`, via `common/controllers/app-controller`.
    */
   appController.app.addInitializer(function (options) {
-
+    app.content.show(new Backbone.Marionette.ItemView({
+      template: templates.content
+    }));
+    app.sidebar.show(new Backbone.Marionette.ItemView({
+      template: templates.sidebar
+    }));
   });
 
   appController.app.on('start', function (options) {
-
   });
 
   /*
@@ -37,7 +50,6 @@
    * configuration, as well as the correct set of templates.
    */
   appController.app.start({
-    templates: templates,
     config: module.config()
   });
 
