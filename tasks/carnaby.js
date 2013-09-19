@@ -482,9 +482,9 @@ module.exports = function(grunt) {
         ['index', 'index.html'],
         ['hbssidebar', 'templates/sidebar.hbs'],
         ['hbsclient', 'templates/content.hbs'],
-        ['blankstylesheet', 'styles/variables.scss'],
-        ['blankstylesheet', 'styles/mixins.scss'],
         ['clientstylesheet', 'styles/main.scss'],
+        ['blankstylesheet', 'styles/_variables.scss'],
+        ['blankstylesheet', 'styles/_mixins.scss'],
         ['requiretarget', 'config/base.json'],
       ],
       // base path (relative to helpers.appDir)
@@ -606,10 +606,69 @@ module.exports = function(grunt) {
     grunt.verbose.writeflags(client, 'client');
     grunt.verbose.writeflags(target, 'target');
 
+    // Drop a description of the target in the build dir, just in case someone
+    // is left wondering wtf is a random dir doing in the middle of the
+    // Concrete5 files.
+
+    grunt.file.write(
+      path.join(target.path, 'target.json'),
+      JSON.stringify(target, null, 4)
+    );
+
+    var copyfiles = helpers.utid('copy');
+    var dest = path.join(target.path, client.name);
+    var corefiles = path.join(helpers.appDir, 'core');
+    var clientfiles = path.join(helpers.appDir, client.name);
+    var clientartifacts = path.join('.carnaby/tmp', client.name);
+
+    grunt.config(copyfiles.property, {
+      files: [{
+        expand: true,
+        cwd: clientartifacts,
+        dest: dest,
+        src: [
+          'styles/**/*',
+          'scripts/**/*'
+        ]
+      }, {
+        expand: true,
+        cwd: clientartifacts,
+        dest: dest,
+        src: [ '*' ],
+        filter: 'isFile'
+      }, {
+        expand: true,
+        cwd: corefiles,
+        dest: dest,
+        src: [ '*' ],
+        filter: 'isFile'
+      }, {
+        expand: true,
+        cwd: path.join(corefiles, 'common/scripts'),
+        dest: path.join(dest, 'common/scripts'),
+        src: [ '**/*' ]
+      }, {
+        expand: true,
+        cwd: clientfiles,
+        dest: dest,
+        src: [
+          'scripts/**/*'
+        ]
+      }, {
+        expand: true,
+        cwd: clientfiles,
+        dest: dest,
+        src: [ '*' ],
+        filter: 'isFile'
+      }]
+    });
+
+
     // Update the client first
     grunt.task.run([
       helpers.run('update-client', client.name, target.name),
-      helpers.run('write-main', client.name, target.name)
+      helpers.run('write-main', client.name, target.name),
+      copyfiles.task,
     ]);
 
   });

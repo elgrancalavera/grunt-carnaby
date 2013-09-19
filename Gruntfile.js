@@ -159,7 +159,9 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:workflow', [
     'clean',
     'carnaby:new-project',
-    'carnaby:new-client:bacon-sandwich'
+    'carnaby:new-client:bacon-sandwich',
+    'carnaby:new-target:piccadilly-billboard:non/standard/path:One of those big billboard things',
+    'carnaby:new-target:aws'
   ]);
 
   grunt.registerTask('default', [
