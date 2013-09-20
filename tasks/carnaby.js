@@ -558,7 +558,6 @@ module.exports = function(grunt) {
     // to work properly.
     var cherryPick = [
       'carnaby:vendor-cherry-pick:html5-boilerplate',
-      '404.html',
       'apple*',
       'favicon.ico',
       'humans.txt',
@@ -662,11 +661,12 @@ module.exports = function(grunt) {
       }]
     });
 
-
-    // Update the client first
     grunt.task.run([
+      // Rebuild all artifacts
       helpers.run('update-client', client.name, target.name),
+      // Write the main.js file we'll use to build the project
       helpers.run('write-main', client.name, target.name),
+      // Copy all of the target's files to the target's dir
       copyfiles.task,
     ]);
 
@@ -675,4 +675,21 @@ module.exports = function(grunt) {
   /*
    * grunt:carnaby:build:all Builds all clients for all targets
    */
+  grunt.registerTask('carnaby:build:all', function () {
+    var project = helpers.readProject();
+    var targets = Object.keys(project.targets);
+    var clients = Object.keys(project.clients);
+    var all = clients.reduce(function (args, client) {
+      return args.concat(targets.map(function (target) {
+        return [client, target];
+      }));
+    }, []);
+
+    console.log('list 1:', clients);
+    console.log('list 2:', targets);
+    console.log('carthesian product:', all);
+
+    // either each target for each client
+    // or each client for each target
+  });
 };

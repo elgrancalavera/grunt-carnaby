@@ -12,9 +12,14 @@
   "node": true,
   "browser": true,
   "indent": 2,
-  "predef": [
-      "define",
-      "require",
-      "requirejs"
-  ]
+  "globals": {
+      "define": false,
+      "require": false,
+      "requirejs":false,
+      "Backbone": false,
+      "Marionette": false,
+      "_": false,
+      "$": false,
+      "jQuery": false
+  }
 }
