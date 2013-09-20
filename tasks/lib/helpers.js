@@ -17,6 +17,7 @@ exports.init = function (grunt) {
   var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
   var targetDir = grunt.config('carnaby.targetDir') || grunt.config('carnaby.targetDir', '.');
   var bowerDir = grunt.config('carnaby.bowerDir') || 'bower_components';
+  var vendorDir = grunt.config('carnaby.vendorDir') || grunt.config('carnaby.vendorDir', 'vendor');
   var filesdir = path.join(__dirname, '..', 'files');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
@@ -305,6 +306,7 @@ exports.init = function (grunt) {
   exports.appDir = appDir;
   exports.bowerDir = bowerDir;
   exports.targetDir = targetDir;
+  exports.vendorDir = vendorDir;
 
   return exports;
 };

@@ -601,6 +601,8 @@ module.exports = function(grunt) {
     var target = args.shift() || helpers.defaulttargetname;
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
+    var targetdir = path.join(target.path, client.name);
+
     grunt.verbose.writeflags(client, 'client');
     grunt.verbose.writeflags(target, 'target');
 
@@ -613,8 +615,13 @@ module.exports = function(grunt) {
       JSON.stringify(target, null, 4)
     );
 
+    //----------------------------------
+    //
+    // copy
+    //
+    //----------------------------------
+
     var copyfiles = helpers.utid('copy');
-    var dest = path.join(target.path, client.name);
     var corefiles = path.join(helpers.appDir, 'core');
     var clientfiles = path.join(helpers.appDir, client.name);
     var clientartifacts = path.join('.carnaby/tmp', client.name);
@@ -623,7 +630,7 @@ module.exports = function(grunt) {
       files: [{
         expand: true,
         cwd: clientartifacts,
-        dest: dest,
+        dest: targetdir,
         src: [
           'styles/**/*',
           'scripts/**/*'
@@ -631,34 +638,59 @@ module.exports = function(grunt) {
       }, {
         expand: true,
         cwd: clientartifacts,
-        dest: dest,
+        dest: targetdir,
         src: [ '*' ],
         filter: 'isFile'
       }, {
         expand: true,
         cwd: corefiles,
-        dest: dest,
+        dest: targetdir,
         src: [ '*' ],
         filter: 'isFile'
       }, {
         expand: true,
         cwd: path.join(corefiles, 'common/scripts'),
-        dest: path.join(dest, 'common/scripts'),
+        dest: path.join(target.path, 'common/scripts'),
         src: [ '**/*' ]
       }, {
         expand: true,
+        cwd: helpers.vendorDir,
+        dest: target.path,
+        src: [ '**/* ']
+      }, {
+        expand: true,
         cwd: clientfiles,
-        dest: dest,
+        dest: targetdir,
         src: [
           'scripts/**/*'
         ]
       }, {
         expand: true,
         cwd: clientfiles,
-        dest: dest,
+        dest: targetdir,
         src: [ '*' ],
         filter: 'isFile'
       }]
+    });
+
+    //----------------------------------
+    //
+    // requirejs
+    //
+    //----------------------------------
+
+    var requirejs = helpers.utid('requirejs');
+    var scriptsdir = path.join(targetdir, 'scripts');
+    var preflightdir = path.join('.preflight', targetdir);
+    grunt.config(requirejs.property, {
+      options: {
+        baseUrl: scriptsdir,
+        dir: preflightdir,
+        mainConfigFile: path.join(scriptsdir, 'main.js'),
+        optimize: 'none',
+        useStrict: true,
+        wrap: true
+      }
     });
 
     grunt.task.run([
@@ -668,6 +700,8 @@ module.exports = function(grunt) {
       helpers.run('write-main', client.name, target.name),
       // Copy all of the target's files to the target's dir
       copyfiles.task,
+      // Run r.js
+      requirejs.task
     ]);
 
   });

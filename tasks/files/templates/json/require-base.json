@@ -29,5 +29,10 @@
             ],
             "exports": "Backbone"
         }
-    }
+    },
+    "modules": [
+        {
+            "name": "app"
+        }
+    ]
 }

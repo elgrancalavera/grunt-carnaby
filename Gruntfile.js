@@ -118,7 +118,7 @@ module.exports = function(grunt) {
 
     // Before generating any new files, remove any files created previously.
     clean: {
-      all: ['tmp/*', '.carnaby/*', 'targets']
+      all: ['tmp/*', '.carnaby/*', 'targets', '.preflight']
     },
 
     // Unit tests.
@@ -161,7 +161,8 @@ module.exports = function(grunt) {
     'carnaby:new-project',
     'carnaby:new-client:bacon-sandwich',
     'carnaby:new-target:piccadilly-billboard:non/standard/path:One of those big billboard things',
-    'carnaby:new-target:aws'
+    'carnaby:new-target:aws',
+    'carnaby:build:bacon-sandwich:piccadilly-billboard'
   ]);
 
   grunt.registerTask('default', [
