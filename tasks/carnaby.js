@@ -601,15 +601,39 @@ module.exports = function(grunt) {
     var target = args.shift() || helpers.defaulttargetname;
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
-    var targetdir = path.join(target.path, client.name);
-
     grunt.verbose.writeflags(client, 'client');
     grunt.verbose.writeflags(target, 'target');
+
+    //----------------------------------
+    //
+    // paths
+    //
+    //----------------------------------
+
+    var appdir = helpers.appDir;
+
+    // destinations
+    var dest_target = target.path;
+    var dest_client = path.join(dest_target, client.name);
+    var dest_client_scripts = path.join(dest_client, 'scripts');
+    var dest_preflight = path.join('.preflight', dest_target);
+    var dest_preflitght_client = path.join('.preflight', dest_client);
+    var dest_preflight_core_scripts = path.join(dest_preflight, 'common/scripts');
+    var dest_preflight_client_scripts = path.join(dest_preflitght_client, 'scripts');
+
+    // sources
+    var src_core = path.join(appdir, 'core');
+    var src_client = path.join(appdir, client.name);
+    var src_client_generated = path.join('.carnaby/tmp', client.name);
+    var src_client_generated_scripts = path.join(src_client_generated, 'scripts');
+    var src_core_scripts = path.join(src_core, 'common/scripts');
+    var src_client_scripts = path.join(src_client, 'scripts');
+    var src_vendor = helpers.vendorDir;
+    var src_mainjs = path.join(src_client_generated, 'scripts/main.js');
 
     // Drop a description of the target in the build dir, just in case someone
     // is left wondering wtf is a random dir doing in the middle of the
     // Concrete5 files.
-
     grunt.file.write(
       path.join(target.path, 'target.json'),
       JSON.stringify(target, null, 4)
@@ -622,55 +646,78 @@ module.exports = function(grunt) {
     //----------------------------------
 
     var copyfiles = helpers.utid('copy');
-    var corefiles = path.join(helpers.appDir, 'core');
-    var clientfiles = path.join(helpers.appDir, client.name);
-    var clientartifacts = path.join('.carnaby/tmp', client.name);
+    // var corefiles = path.join(helpers.appDir, 'core');
+    // var clientfiles = path.join(helpers.appDir, client.name);
+    // var clientartifacts = path.join('.carnaby/tmp', client.name);
 
     grunt.config(copyfiles.property, {
-      files: [{
-        expand: true,
-        cwd: clientartifacts,
-        dest: targetdir,
-        src: [
-          'styles/**/*',
-          'scripts/**/*'
-        ]
-      }, {
-        expand: true,
-        cwd: clientartifacts,
-        dest: targetdir,
-        src: [ '*' ],
-        filter: 'isFile'
-      }, {
-        expand: true,
-        cwd: corefiles,
-        dest: targetdir,
-        src: [ '*' ],
-        filter: 'isFile'
-      }, {
-        expand: true,
-        cwd: path.join(corefiles, 'common/scripts'),
-        dest: path.join(target.path, 'common/scripts'),
-        src: [ '**/*' ]
-      }, {
-        expand: true,
-        cwd: helpers.vendorDir,
-        dest: target.path,
-        src: [ '**/* ']
-      }, {
-        expand: true,
-        cwd: clientfiles,
-        dest: targetdir,
-        src: [
-          'scripts/**/*'
-        ]
-      }, {
-        expand: true,
-        cwd: clientfiles,
-        dest: targetdir,
-        src: [ '*' ],
-        filter: 'isFile'
-      }]
+      files: [
+
+        //----------------------------------
+        //
+        // 1. Everything that isn't a script
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: src_client_generated,
+          dest: dest_client,
+          src: [
+            'styles/**/*',
+          ]
+        },
+        {
+          expand: true,
+          cwd: src_client_generated,
+          dest: dest_client,
+          src: [ '*' ],
+          filter: 'isFile'
+        },
+        {
+          expand: true,
+          cwd: src_core,
+          dest: dest_client,
+          src: [ '*' ],
+          filter: 'isFile'
+        },
+        {
+          expand: true,
+          cwd: src_client,
+          dest: dest_client,
+          src: [ '*' ],
+          filter: 'isFile'
+        },
+
+        //----------------------------------
+        //
+        // 2. Scripts to preflight location
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: src_core_scripts,
+          dest: dest_preflight_core_scripts,
+          src: [ '**/*.js' ]
+        },
+        {
+          expand: true,
+          cwd: src_vendor,
+          dest: dest_preflight,
+          src: [ '**/*.js']
+        },
+        {
+          expand: true,
+          cwd: src_client_scripts,
+          dest: dest_preflight_client_scripts,
+          src: [ '**/*.js' ]
+        },
+        {
+          expand: true,
+          cwd: src_client_generated_scripts,
+          dest: dest_preflight_client_scripts,
+          src: ['**/*.js']
+        }
+      ]
     });
 
     //----------------------------------
@@ -680,13 +727,11 @@ module.exports = function(grunt) {
     //----------------------------------
 
     var requirejs = helpers.utid('requirejs');
-    var scriptsdir = path.join(targetdir, 'scripts');
-    var preflightdir = path.join('.preflight', targetdir);
     grunt.config(requirejs.property, {
       options: {
-        baseUrl: scriptsdir,
-        dir: preflightdir,
-        mainConfigFile: path.join(scriptsdir, 'main.js'),
+        baseUrl: dest_preflight_client_scripts,
+        dir: dest_client_scripts,
+        mainConfigFile: src_mainjs,
         optimize: 'none',
         useStrict: true,
         wrap: true

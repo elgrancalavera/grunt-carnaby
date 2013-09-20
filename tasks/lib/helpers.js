@@ -214,7 +214,7 @@ exports.init = function (grunt) {
   };
 
   var look = function (what, color) {
-    grunt.verbose.writeln(what[color || 'yellow']);
+    grunt.log.writeln(what[color || 'yellow']);
   };
 
   var lookdown = exports.lookdown = function (color) {

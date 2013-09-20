@@ -160,9 +160,7 @@ module.exports = function(grunt) {
     'clean',
     'carnaby:new-project',
     'carnaby:new-client:bacon-sandwich',
-    'carnaby:new-target:piccadilly-billboard:non/standard/path:One of those big billboard things',
-    'carnaby:new-target:aws',
-    'carnaby:build:bacon-sandwich:piccadilly-billboard'
+    'carnaby:build:all'
   ]);
 
   grunt.registerTask('default', [
