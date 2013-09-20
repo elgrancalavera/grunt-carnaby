@@ -6,3 +6,4 @@ tmp
 bower_components
 .sass-cache
 targets
+.preflight
