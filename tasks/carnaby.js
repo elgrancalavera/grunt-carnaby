@@ -677,19 +677,25 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby:build:all', function () {
     var project = helpers.readProject();
-    var targets = Object.keys(project.targets);
     var clients = Object.keys(project.clients);
+    var targets = Object.keys(project.targets);
+
+    // The carthesian product of clients X targets gives you a list of
+    // [ [ client, target ] ] which you can then use to build each client
+    // for each target.
     var all = clients.reduce(function (args, client) {
       return args.concat(targets.map(function (target) {
         return [client, target];
       }));
     }, []);
 
-    console.log('list 1:', clients);
-    console.log('list 2:', targets);
-    console.log('carthesian product:', all);
+    // make `all` a task list that can be used by grunt
+    all = all.map(function (args) {
+      return helpers.run.apply(helpers, ['build'].concat(args));
+    });
+    grunt.verbose.writeflags(all, 'each client each target');
 
-    // either each target for each client
-    // or each client for each target
+    grunt.task.run(all);
+
   });
 };
