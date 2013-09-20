@@ -620,6 +620,7 @@ module.exports = function(grunt) {
     var dest_preflitght_client = path.join('.preflight', dest_client);
     var dest_preflight_core_scripts = path.join(dest_preflight, 'common/scripts');
     var dest_preflight_client_scripts = path.join(dest_preflitght_client, 'scripts');
+    var dest_bower = path.join(dest_client, 'bower_components');
 
     // sources
     var src_core = path.join(appdir, 'core');
@@ -629,6 +630,7 @@ module.exports = function(grunt) {
     var src_core_scripts = path.join(src_core, 'common/scripts');
     var src_client_scripts = path.join(src_client, 'scripts');
     var src_vendor = helpers.vendorDir;
+    var src_bower = path.join(src_vendor, 'bower_components');
     var src_mainjs = path.join(src_client_generated, 'scripts/main.js');
 
     // Drop a description of the target in the build dir, just in case someone
@@ -716,6 +718,23 @@ module.exports = function(grunt) {
           cwd: src_client_generated_scripts,
           dest: dest_preflight_client_scripts,
           src: ['**/*.js']
+        },
+
+        //----------------------------------
+        //
+        // 3. loose ends: plugins.js
+        //    handlebars.js, require.js
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: src_bower,
+          dest: dest_bower,
+          src: [
+            'html5-boilerplate/js/plugins.js',
+            'handlebars/handlebars.js',
+            'requirejs/require.js'
+          ]
         }
       ]
     });
