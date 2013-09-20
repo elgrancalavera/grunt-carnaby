@@ -643,6 +643,18 @@ module.exports = function(grunt) {
 
     //----------------------------------
     //
+    // clean
+    //
+    //----------------------------------
+
+    var clean = helpers.utid('clean');
+    grunt.config(clean.property, [
+      dest_preflitght_client,
+      dest_client
+    ]);
+
+    //----------------------------------
+    //
     // copy
     //
     //----------------------------------
@@ -758,14 +770,11 @@ module.exports = function(grunt) {
     });
 
     grunt.task.run([
-      // Rebuild all artifacts
+      clean.task,
       helpers.run('update-client', client.name, target.name),
-      // Write the main.js file we'll use to build the project
       helpers.run('write-main', client.name, target.name),
-      // Copy all of the target's files to the target's dir
       copyfiles.task,
-      // Run r.js
-      requirejs.task
+      requirejs.task,
     ]);
 
   });
