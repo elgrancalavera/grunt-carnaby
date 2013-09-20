@@ -16,9 +16,6 @@ var mountFolder = function (connect, dir) {
 };
 
 module.exports = function(grunt) {
-
-  // Project configuration.
-
   grunt.initConfig({
 
     //--------------------------------------------------------------------------

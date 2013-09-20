@@ -514,7 +514,8 @@ module.exports = function(grunt) {
       processTemplate({
         context: {target: target.name},
         template: 'requiretarget',
-        filepath: path.join(client.name, 'config', target.name + '.json')
+        filepath: path.join(client.name, 'config', target.name + '.json'),
+        force: force
       });
     });
 
