@@ -9,10 +9,16 @@
 'use strict';
 var path = require('path');
 var fs = require('fs');
+var LIVERELOAD_PORT = 35729;
+var lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT});
 
 module.exports = function(grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var handlebarsOptions = require('./lib/handlebars-options').init(grunt);
+
+  var mountFolder = function (connect, dir) {
+    return connect.static(path.resolve(dir));
+  };
 
   var makeTemplateOptionsList = function (templatelist, basepath, options) {
     grunt.log.writeflags(templatelist);
@@ -660,10 +666,6 @@ module.exports = function(grunt) {
     //----------------------------------
 
     var copyfiles = helpers.utid('copy');
-    // var corefiles = path.join(helpers.appDir, 'core');
-    // var clientfiles = path.join(helpers.appDir, client.name);
-    // var clientartifacts = path.join('.carnaby/tmp', client.name);
-
     grunt.config(copyfiles.property, {
       files: [
 
@@ -792,17 +794,26 @@ module.exports = function(grunt) {
     // for each target.
     var all = clients.reduce(function (args, client) {
       return args.concat(targets.map(function (target) {
-        return [client, target];
+        return helpers.run('build', client, target);
       }));
     }, []);
-
-    // make `all` a task list that can be used by grunt
-    all = all.map(function (args) {
-      return helpers.run.apply(helpers, ['build'].concat(args));
-    });
     grunt.verbose.writeflags(all, 'each client each target');
-
     grunt.task.run(all);
-
   });
+
+  /*
+   * grunt:carnaby:update-client:all[:target] updates all clients
+   * defaults to grunt:carnaby:all:local
+   */
+  grunt.registerTask('carnaby:update-client:all', function () {
+    var args = helpers.removeFlags(this.args);
+    var clients = Object.keys(helpers.readProject().clients);
+    var target = args.shift() || helpers.defaulttargetname;
+    target = helpers.readTarget(target);
+    var all = clients.map(function (client) {
+      return helpers.run('update-client', client, target.name);
+    });
+    grunt.task.run(all);
+  });
+
 };

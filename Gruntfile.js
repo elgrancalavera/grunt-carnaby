@@ -60,7 +60,7 @@ module.exports = function(grunt) {
             return [
               lrSnippet,
               mountFolder(connect, '.carnaby/tmp'),
-              mountFolder(connect, 'vendor'),
+              mountFolder(connect, grunt.config('carnaby.vendorDir')),
               mountFolder(connect, path.join(grunt.config('carnaby.appDir') , 'core')),
               mountFolder(connect, grunt.config('carnaby.appDir'))
             ];
@@ -171,15 +171,14 @@ module.exports = function(grunt) {
     'nodeunit',
     'clean',
     'carnaby:workflow',
-    'jshint:artifacts',
+    'jshint:artifacts'
   ]);
 
-  grunt.registerTask('ci', [
-    'clean',
-    'carnaby:workflow',
+  grunt.registerTask('carnaby:start', [
+    'carnaby:update-client:all',
     'jshint:dev',
     'connect:livereload',
-    'watch',
+    'watch'
   ]);
 
 };
