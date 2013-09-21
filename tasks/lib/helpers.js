@@ -9,6 +9,7 @@
 'use strict';
 var path = require('path');
 var templates = require('./templates');
+var assert = require('assert');
 
 exports.init = function (grunt) {
 
@@ -28,8 +29,7 @@ exports.init = function (grunt) {
   // flags (to be removed before using the positional arguments):
   var flags = [
     'force',
-    'dry-run',
-    'all'
+    'dry-run'
   ];
 
   var readTemplate = exports.readTemplate = function (name) {
@@ -113,24 +113,15 @@ exports.init = function (grunt) {
 
   var readClient = exports.readClient = function (name, lenient) {
     name = name || defaultclientname;
-    var clients = readProject().clients;
-    var client = clients[name];
-    grunt.verbose.writeflags(clients, 'known clients');
-    if (!client && !lenient) {
-      grunt.fatal('Unknown client "' + name + '". Aborting.');
-    }
-    grunt.verbose.writeflags(client, name);
+    var client = readProject().clients[name];
+    assert(client || lenient, 'Unknown client "' + name + '".');
     return client;
   };
 
   var readTarget = exports.readTarget = function (name, lenient) {
     name = name || defaulttargetname;
-    var targets = readProject().targets;
-    var target = targets[name];
-    if (!target && !lenient) {
-      grunt.fatal('Unknown target "' + name + '". Aborting.');
-    }
-    grunt.verbose.writeflags(target, name);
+    var target = readProject().targets[name];
+    assert(target || lenient, 'Unknown target "' + name + '".');
     return target;
   };
 
@@ -207,10 +198,55 @@ exports.init = function (grunt) {
     };
   };
 
-  exports.run = function () {
+  var run = exports.run = function () {
     var description = ['carnaby'].concat(grunt.util.toArray(arguments));
-    grunt.verbose.writeflags(description, 'runtask');
-    return description.join(':');
+    var task = description.join(':');
+    grunt.verbose.writeln('helpers.run(): ' + task.cyan);
+    return task;
+  };
+
+  // The carthesian product of clients X targets gives you a list of
+  // [ [ client, target ] ].
+  // Returns a list of carnaby tasks.
+  exports.runAll = function (task) {
+    assert(task, 'helpers.runAll(task) task is required.');
+    var project = readProject();
+    var clients = Object.keys(project.clients);
+    var targets = Object.keys(project.targets);
+    var all = clients.reduce(function (_all, client) {
+      return _all.concat(targets.map(function (target) {
+        return run(task, client, target);
+      }));
+    }, []);
+    grunt.verbose.writeflags(all, 'helpers.runAll()');
+    return all;
+  };
+
+  // Returns a list of carnaby tasks for all clients and one (1) target
+  exports.runAllClients = function (task, targetName) {
+    assert(task, 'helpers.runAllClients: "task" is required.');
+    assert(targetName, 'helpers.runAllClients: "targetName" is required.');
+    var target = readTarget(targetName);
+    var clients = Object.keys(readProject().clients);
+    var all = clients.map(function (client) {
+      return run(task, client, target.name);
+    });
+    grunt.verbose.writeflags(all, 'helpers.runAllClients()');
+    return all;
+  };
+
+
+  // Returns a list of carnaby tasks for all targets and one (1) client
+  exports.runAllTargets = function (task, clientName) {
+    assert(task, 'helpers.runAllTargets: "task" is required.');
+    assert(clientName, 'helpers.runAllTargets: "clientName" is required.');
+    var client = readClient(clientName);
+    var targets = Object.keys(readProject().targets);
+    var all = targets.map(function (target) {
+      return run (task, client.name, target);
+    });
+    grunt.verbose.writeflags(all, 'helpers.runAllTargets()');
+    return all;
   };
 
   var look = function (what, color) {

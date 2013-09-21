@@ -157,6 +157,7 @@ module.exports = function(grunt) {
     'clean',
     'carnaby:new-project',
     'carnaby:new-client:bacon-sandwich',
+    'carnaby:new-target:dist:dir/subdir/name:A target with a non standard path.',
     'carnaby:build:all'
   ]);
 
@@ -173,6 +174,12 @@ module.exports = function(grunt) {
 
   grunt.registerTask('carnaby:start', [
     'carnaby:update-client:all',
+    'jshint:dev',
+    'connect:livereload',
+    'watch'
+  ]);
+
+  grunt.registerTask('start', [
     'jshint:dev',
     'connect:livereload',
     'watch'

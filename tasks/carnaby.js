@@ -366,7 +366,6 @@ module.exports = function(grunt) {
       'carnaby:write-main:' + client.name + ':' + target.name,
       'carnaby:update-index'
     );
-    grunt.log.writeflags(clientTasks);
     grunt.verbose.writeflags(clientTasks, 'client tasks');
     grunt.task.run(clientTasks);
   });
@@ -429,15 +428,19 @@ module.exports = function(grunt) {
     var target = args.shift() || helpers.defaulttargetname;
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
+    var configpath = path.join('.carnaby/tmp', client.name, 'config', target.name + '.json');
+    var destpath = path.join(client.name, 'scripts/main.js');
+    var config = grunt.file.read(configpath);
     var options = {
-      filepath: path.join(client.name, 'scripts/main.js'),
+      filepath: destpath,
       template: 'main',
       force: true,
       context: {
-        config: grunt.file.read(path.join('.carnaby/tmp', client.name, 'config', target.name + '.json'))
+        config: config
       },
       base: target.path
     };
+
     processTemplate(options);
 
     // if the target is the default target, we assume the user is a front end
@@ -599,46 +602,26 @@ module.exports = function(grunt) {
   });
 
   /*
-   * grunt:carnaby:build[:client][:target] Builds one client for one target
-   *  defaults to grunt:carnaby:build:mobile:local
+   * carnaby:build[:client][:target] Builds one client for one target
+   *  defaults to carnaby:build:mobile:local
    */
   grunt.registerTask('carnaby:build', function () {
+
+    //----------------------------------
+    //
+    // setup
+    //
+    //----------------------------------
+
     var args = helpers.removeFlags(this.args);
+    var appdir = helpers.appDir;
+    var vendordir = helpers.vendorDir;
+    var bowerdir = helpers.bowerDir;
     var client = args.shift() || helpers.defaultclientname;
     var target = args.shift() || helpers.defaulttargetname;
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
-    grunt.verbose.writeflags(client, 'client');
-    grunt.verbose.writeflags(target, 'target');
 
-    //----------------------------------
-    //
-    // paths
-    //
-    //----------------------------------
-
-    var appdir = helpers.appDir;
-
-    // destinations
-    var dest_target = target.path;
-    var dest_client = path.join(dest_target, client.name);
-    var dest_client_scripts = path.join(dest_client, 'scripts');
-    var dest_preflight = path.join('.preflight', dest_target);
-    var dest_preflitght_client = path.join('.preflight', dest_client);
-    var dest_preflight_core_scripts = path.join(dest_preflight, 'common/scripts');
-    var dest_preflight_client_scripts = path.join(dest_preflitght_client, 'scripts');
-    var dest_bower = path.join(dest_client, 'bower_components');
-
-    // sources
-    var src_core = path.join(appdir, 'core');
-    var src_client = path.join(appdir, client.name);
-    var src_client_generated = path.join('.carnaby/tmp', client.name);
-    var src_client_generated_scripts = path.join(src_client_generated, 'scripts');
-    var src_core_scripts = path.join(src_core, 'common/scripts');
-    var src_client_scripts = path.join(src_client, 'scripts');
-    var src_vendor = helpers.vendorDir;
-    var src_bower = path.join(src_vendor, 'bower_components');
-    var src_mainjs = path.join(src_client_generated, 'scripts/main.js');
 
     // Drop a description of the target in the build dir, just in case someone
     // is left wondering wtf is a random dir doing in the middle of the
@@ -656,8 +639,8 @@ module.exports = function(grunt) {
 
     var clean = helpers.utid('clean');
     grunt.config(clean.property, [
-      dest_preflitght_client,
-      dest_client
+      path.join('.preflight', target.path, client.name),
+      path.join(target.path, client.name),
     ]);
 
     //----------------------------------
@@ -672,85 +655,113 @@ module.exports = function(grunt) {
 
         //----------------------------------
         //
-        // 1. Everything that isn't a script
+        // first 2 copy sets should be a
+        // separated task, like:
+        // carnaby:preflight:target
+        //
+        //----------------------------------
+
+        //----------------------------------
+        //
+        // app/core/common > .preflight/target/common
         //
         //----------------------------------
         {
           expand: true,
-          cwd: src_client_generated,
-          dest: dest_client,
-          src: [
-            'styles/**/*',
-          ]
+          cwd: path.join(appdir, 'core/common'),
+          dest: path.join('.preflight', target.path, 'common'),
+          src: [ 'scripts/**/*' ]
         },
+
+        //----------------------------------
+        //
+        // vendor > .preflight/target
+        //
+        //----------------------------------
         {
           expand: true,
-          cwd: src_client_generated,
-          dest: dest_client,
-          src: [ '*' ],
+          cwd: vendordir,
+          dest: path.join('.preflight', target.path),
+          src: [ '**/*.js'],
           filter: 'isFile'
         },
+
+        //----------------------------------
+        //
+        // app/client/scripts > .preflight/target/client
+        //
+        //----------------------------------
         {
           expand: true,
-          cwd: src_core,
-          dest: dest_client,
-          src: [ '*' ],
-          filter: 'isFile'
+          cwd: path.join(appdir, client.name, 'scripts'),
+          dest: path.join('.preflight', target.path, client.name, 'scripts'),
+          src: [ '**/*' ]
         },
+
+        //----------------------------------
+        //
+        // .carnaby/tmp/client/scripts > to .preflight/target/client/scripts
+        //
+        //----------------------------------
         {
           expand: true,
-          cwd: src_client,
-          dest: dest_client,
+          cwd: path.join('.carnaby/tmp', client.name, 'scripts'),
+          dest: path.join('.preflight', target.path, client.name, 'scripts'),
+          src: [ 'templates.js ']
+        },
+
+        //----------------------------------
+        //
+        // target/client/scrpts > .preflight/target/client/scripts
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: path.join(target.path, client.name, 'scripts'),
+          dest: path.join('.preflight', target.path, client.name, 'scripts'),
+          src: ['main.js']
+        },
+
+        //----------------------------------
+        //
+        // .carnaby/tmp/client > to target/client
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: path.join('.carnaby/tmp', client.name),
+          dest: path.join(target.path, client.name),
+          src: [ 'styles/**/*.css' ]
+        },
+
+        //----------------------------------
+        //
+        // app/client/ > target/client
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: path.join(appdir, client.name),
+          dest: path.join(target.path, client.name),
           src: [ '*' ],
           filter: 'isFile'
         },
 
         //----------------------------------
         //
-        // 2. Scripts to preflight location
+        // loose ends: plugins.js, handlebars.js, require.js
         //
         //----------------------------------
         {
           expand: true,
-          cwd: src_core_scripts,
-          dest: dest_preflight_core_scripts,
-          src: [ '**/*.js' ]
-        },
-        {
-          expand: true,
-          cwd: src_vendor,
-          dest: dest_preflight,
-          src: [ '**/*.js']
-        },
-        {
-          expand: true,
-          cwd: src_client_scripts,
-          dest: dest_preflight_client_scripts,
-          src: [ '**/*.js' ]
-        },
-        {
-          expand: true,
-          cwd: src_client_generated_scripts,
-          dest: dest_preflight_client_scripts,
-          src: ['**/*.js']
-        },
-
-        //----------------------------------
-        //
-        // 3. loose ends: plugins.js
-        //    handlebars.js, require.js
-        //
-        //----------------------------------
-        {
-          expand: true,
-          cwd: src_bower,
-          dest: dest_bower,
+          cwd: bowerdir,
+          dest: path.join(target.path, client.name, 'bower_components'),
           src: [
             'html5-boilerplate/js/plugins.js',
             'handlebars/handlebars.js',
             'requirejs/require.js'
           ]
-        }
+        },
       ]
     });
 
@@ -763,9 +774,9 @@ module.exports = function(grunt) {
     var requirejs = helpers.utid('requirejs');
     grunt.config(requirejs.property, {
       options: {
-        baseUrl: dest_preflight_client_scripts,
-        dir: dest_client_scripts,
-        mainConfigFile: src_mainjs,
+        baseUrl: path.join('.preflight', target.path, client.name, 'scripts'),
+        mainConfigFile: path.join('.preflight', target.path, client.name, 'scripts/main.js'),
+        dir: path.join(target.path, client.name, 'scripts'),
         optimize: 'none',
         useStrict: true,
         wrap: true
@@ -775,45 +786,33 @@ module.exports = function(grunt) {
     grunt.task.run([
       clean.task,
       helpers.run('update-client', client.name, target.name),
-      helpers.run('write-main', client.name, target.name),
       copyfiles.task,
-      requirejs.task,
+      requirejs.task
     ]);
-
   });
 
   /*
-   * grunt:carnaby:build:all Builds all clients for all targets
+   * carnaby:build:all Builds all clients for all targets
    */
   grunt.registerTask('carnaby:build:all', function () {
-    var project = helpers.readProject();
-    var clients = Object.keys(project.clients);
-    var targets = Object.keys(project.targets);
-
-    // The carthesian product of clients X targets gives you a list of
-    // [ [ client, target ] ] which you can then use to build each client
-    // for each target.
-    var all = clients.reduce(function (args, client) {
-      return args.concat(targets.map(function (target) {
-        return helpers.run('build', client, target);
-      }));
-    }, []);
-    grunt.verbose.writeflags(all, 'each client each target');
-    grunt.task.run(all);
+    var all = helpers.runAll('build');
+    // grunt.task.run(all);
   });
 
   /*
-   * grunt:carnaby:update-client:all[:target] updates all clients
-   * defaults to grunt:carnaby:all:local
+   * carnaby:update-client:all[:target] updates all clients
+   * defaults to carnaby:all:local
    */
   grunt.registerTask('carnaby:update-client:all', function () {
     var args = helpers.removeFlags(this.args);
-    var clients = Object.keys(helpers.readProject().clients);
-    var target = args.shift() || helpers.defaulttargetname;
-    target = helpers.readTarget(target);
-    var all = clients.map(function (client) {
-      return helpers.run('update-client', client, target.name);
-    });
+    var target = args.shift();
+    var all;
+    if (target) {
+      target = helpers.readTarget(target).name;
+      all = helpers.runAllClients('update-client', target);
+    } else {
+      all = helpers.runAll('update-client');
+    }
     grunt.task.run(all);
   });
 
