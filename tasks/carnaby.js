@@ -12,7 +12,7 @@ var fs = require('fs');
 var LIVERELOAD_PORT = 35729;
 var lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT});
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var handlebarsOptions = require('./lib/handlebars-options').init(grunt);
 
@@ -269,29 +269,35 @@ module.exports = function(grunt) {
     var target = helpers.deleteTarget(name, dry);
     var clients = helpers.readProject().clients;
 
-    var files = grunt.util._.reduce(clients, function (files, client) {
-      return files.concat(client.root);
-    }, [path.join(helpers.appDir, 'core')]).map(function (file) {
-      return path.join(file, 'config', name + '.json');
+    // each config from each client
+    var files = grunt.util._.map(clients, function (client) {
+      return path.join(client.root, 'config', target.name + '.json');
     });
-    files.push(target.path);
+    // core target config and .preflight artifacts
+    files.push(path.join(helpers.appDir, 'core', target.name + '.json'));
+    files.push(path.join('.preflight', target.path));
 
+    var clean = helpers.utid('clean');
+    grunt.config(clean.property, files);
     grunt.log.writeflags(files, 'deleting files');
 
     if (dry) {
-      return grunt.log.writeln('Stopping before deleting files are requested.'.yellow);
+      grunt.log.writeln('Stopping before deleting files are requested.'.yellow);
+      return grunt.log.ok();
     }
 
-    var cleantarget = helpers.utid('clean');
-    grunt.config(cleantarget.property, files);
-    grunt.log.writeflags(grunt.config('clean'), 'clean');
-    grunt.task.run(cleantarget.task);
-
-    // then we need to update some of the clients tasks... and since there is
+    // Then we need to update some of the clients tasks... and since there is
     // no other way to do it yet, I'm just updating the whole lot again.
+    // It is fine to do this here before running the task, because the config
+    // file is updated by helpers.deleteTarget, which means that it will be
+    // updated by the time when updateTasks runs.
     grunt.util._.each(clients, updateTasks);
-    grunt.task.run(['carnaby:update-config', 'extend']);
+    var tasks = [
+      clean.task,
+      'carnaby:update-config',
+    ].concat(helpers.runAllClients('extend', null, true));
 
+    grunt.task.run(tasks);
     grunt.log.ok();
   });
 
@@ -622,7 +628,6 @@ module.exports = function(grunt) {
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
 
-
     // Drop a description of the target in the build dir, just in case someone
     // is left wondering wtf is a random dir doing in the middle of the
     // Concrete5 files.
@@ -696,6 +701,19 @@ module.exports = function(grunt) {
           cwd: path.join(appdir, client.name, 'scripts'),
           dest: path.join('.preflight', target.path, client.name, 'scripts'),
           src: [ '**/*' ]
+        },
+
+        //----------------------------------
+        //
+        // app/core > target/client
+        //
+        //----------------------------------
+        {
+          expand: true,
+          cwd: path.join(appdir, 'core'),
+          dest: path.join(target.path, client.name),
+          src: [ '*' ],
+          filter: 'isFile'
         },
 
         //----------------------------------
@@ -796,7 +814,7 @@ module.exports = function(grunt) {
    */
   grunt.registerTask('carnaby:build:all', function () {
     var all = helpers.runAll('build');
-    // grunt.task.run(all);
+    grunt.task.run(all);
   });
 
   /*
@@ -814,6 +832,46 @@ module.exports = function(grunt) {
       all = helpers.runAll('update-client');
     }
     grunt.task.run(all);
+  });
+
+  /*
+   * carnaby:clean-target[:target] cleans all the artifacts for a target, including
+   * preflight files. Leaves the target dir in place to allow GitHub style
+   * deployments (keeping .git in place)
+   * defaults to carnaby:clean-target:local
+   */
+  grunt.registerTask('carnaby:clean-target', function () {
+    var args = helpers.removeFlags(this.args);
+    var target = helpers.readTarget(args.shift() || helpers.defaulttargetname);
+    var clean = helpers.utid('clean');
+    grunt.config(clean.property, [
+      path.join('.preflight', target.path),
+      path.join(target.path, '**/*')
+    ]);
+    grunt.task.run(clean.task);
+  });
+
+  /*
+   * carnaby:clean-client[:client] cleans all the artifacts for a client
+   * defaults to carnaby:clean-client:mobile
+   */
+  grunt.registerTask('carnaby:clean-client', function () {
+    var args = helpers.removeFlags(this.args);
+    var client = helpers.readClient(args.shift() || helpers.defaultclientname);
+    var clean = helpers.utid('clean');
+    grunt.config(clean.property, [
+      path.join('.carnaby/tmp', client.name)
+    ]);
+    grunt.task.run(clean.task);
+  });
+
+  /*
+   * carnaby:clean cleans all artifacts, like "all"
+   */
+  grunt.registerTask('carnaby:clean', function () {
+    var clients = helpers.runAllClients('clean-client');
+    var targets = helpers.runAllTargets('clean-target');
+    grunt.task.run([].concat(clients, targets));
   });
 
 };

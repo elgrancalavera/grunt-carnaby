@@ -198,52 +198,72 @@ exports.init = function (grunt) {
     };
   };
 
+  var taskify = function (description) {
+    var task = description.join(':');
+    grunt.verbose.writeln('helpers.taskify(): ' + task.cyan);
+    return task;
+  };
+
   var run = exports.run = function () {
     var description = ['carnaby'].concat(grunt.util.toArray(arguments));
-    var task = description.join(':');
-    grunt.verbose.writeln('helpers.run(): ' + task.cyan);
-    return task;
+    return taskify(description);
+  };
+
+  var runVendor = exports.runVendor = function () {
+    var description = grunt.util.toArray(arguments);
+    return taskify(description);
   };
 
   // The carthesian product of clients X targets gives you a list of
   // [ [ client, target ] ].
   // Returns a list of carnaby tasks.
-  exports.runAll = function (task) {
+  exports.runAll = function (task, isVendor) {
     assert(task, 'helpers.runAll(task) task is required.');
     var project = readProject();
     var clients = Object.keys(project.clients);
     var targets = Object.keys(project.targets);
+    var runner = isVendor ? runVendor : run;
     var all = clients.reduce(function (_all, client) {
       return _all.concat(targets.map(function (target) {
-        return run(task, client, target);
+        return runner(task, client, target);
       }));
     }, []);
     grunt.verbose.writeflags(all, 'helpers.runAll()');
     return all;
   };
 
-  // Returns a list of carnaby tasks for all clients and one (1) target
-  exports.runAllClients = function (task, targetName) {
+  // Returns a list of carnaby tasks for all clients and one (1) optional target
+  exports.runAllClients = function (task, targetName, isVendor) {
     assert(task, 'helpers.runAllClients: "task" is required.');
-    assert(targetName, 'helpers.runAllClients: "targetName" is required.');
-    var target = readTarget(targetName);
     var clients = Object.keys(readProject().clients);
+    var runner = isVendor ? runVendor : run;
+    if (targetName) {
+      var target = readTarget(targetName);
+    }
     var all = clients.map(function (client) {
-      return run(task, client, target.name);
+      if (targetName) {
+        return runner(task, client, target.name);
+      }
+      return runner(task, client);
     });
     grunt.verbose.writeflags(all, 'helpers.runAllClients()');
     return all;
   };
 
 
-  // Returns a list of carnaby tasks for all targets and one (1) client
-  exports.runAllTargets = function (task, clientName) {
+  // Returns a list of carnaby tasks for all targets and one (1) optional client
+  exports.runAllTargets = function (task, clientName, isVendor) {
     assert(task, 'helpers.runAllTargets: "task" is required.');
-    assert(clientName, 'helpers.runAllTargets: "clientName" is required.');
-    var client = readClient(clientName);
     var targets = Object.keys(readProject().targets);
+    var runner = isVendor ? runVendor : run;
+    if (clientName) {
+      var client = readClient(clientName);
+    }
     var all = targets.map(function (target) {
-      return run (task, client.name, target);
+      if (clientName) {
+        return runner(task, client.name, target);
+      }
+      return runner(task, target);
     });
     grunt.verbose.writeflags(all, 'helpers.runAllTargets()');
     return all;
