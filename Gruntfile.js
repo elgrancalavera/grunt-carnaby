@@ -1,3 +1,4 @@
+/*global module:false*/
 /*
  * grunt-carnaby
  * ./Gruntfile.js
@@ -7,8 +8,8 @@
  * Licensed under the MIT license.
  */
 'use strict';
+
 var path = require('path');
-/*global module:false*/
 var LIVERELOAD_PORT = 35729;
 var lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT});
 var mountFolder = function (connect, dir) {
@@ -17,39 +18,17 @@ var mountFolder = function (connect, dir) {
 
 module.exports = function(grunt) {
   grunt.initConfig({
-
-    //--------------------------------------------------------------------------
-    //
-    // Carnaby
-    //
-    //--------------------------------------------------------------------------
-
     carnaby: {
       appDir: 'tmp',
       bowerDir: grunt.file.readJSON('.bowerrc').directory,
-      targetDir: 'targets'
+      targetDir: 'targets',
+      vendorDir: 'vendor'
     },
-
-    //--------------------------------------------------------------------------
-    //
-    // Grunt
-    //
-    //--------------------------------------------------------------------------
-
     connect: {
       options: {
         port: 9000,
         // change this to '0.0.0.0' to access the server from outside
         hostname: 'localhost'
-      },
-      dist: {
-        options: {
-          middleware: function (connect) {
-            return [
-              mountFolder(connect, 'dist')
-            ];
-          }
-        }
       },
       livereload: {
         options: {
@@ -65,7 +44,6 @@ module.exports = function(grunt) {
         }
       }
     },
-
     copy: {
       test: {
         files: {
@@ -73,54 +51,41 @@ module.exports = function(grunt) {
         }
       }
     },
-
-    handlebars: {},
-    extend: {},
     watch: {
       options: {
         nospawn: true,
         livereload: true
-      },
-      jshint_common: {
-        files: '<%= jshint.common %>',
-        tasks: [
-          'jshint:common'
-        ]
       },
       livereload: {
         options: {
           livereload: LIVERELOAD_PORT
         },
         files: [
-          'tmp/*.html',
-          '<%= carnaby.appDir %>/**/index.html',
-          '.carnaby/tmp/*/scripts/**/*.js'
+          '<%= carnaby.appDir %>/**/*.html',
+          '.carnaby/tmp/*/scripts/templates.js'
         ]
-      },
-      dev: {
-        files: '<%= jshint.dev %>',
-        tasks: ['jshint:dev']
       },
       updateConfig: {
         files: '.carnaby/project.json',
         tasks: ['carnaby:update-config']
-      }
+      },
+      project: {
+        files: '<%= jshint.project %>',
+        tasks: ['jshint:project']
+      },
     },
     jshint: {
       options: {
         jshintrc: '.jshintrc',
       },
-      dev: [
+      project: [
         'Gruntfile.js',
+        '<%= carnaby.appDir %>/core/common/scripts/**/*.js',
         'tasks/**/*.js',
-        '<%= nodeunit.tests %>',
-        '!tasks/files/**/*'
+        '!**/templates/**/*',
       ],
       artifacts: [
         'tmp/**/*.{js,json}'
-      ],
-      common: [
-        '<%= carnaby.appDir %>/core/common/scripts/**/*.js'
       ]
     },
 
@@ -161,7 +126,7 @@ module.exports = function(grunt) {
   var workflow =  [
     'clean',
     'carnaby:new-project',
-    'carnaby:build',
+    'carnaby:build'
   ];
   var workflow_long = [
     'carnaby:workflow',
@@ -176,11 +141,13 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:workflow', workflow);
 
   grunt.registerTask('carnaby:workflow:watch', workflow.concat(
+    'jshint',
     'connect:livereload',
     'watch'
   ));
 
   grunt.registerTask('carnaby:workflow:long:watch', workflow_long.concat(
+    'jshint',
     'connect:livereload',
     'watch'
   ));

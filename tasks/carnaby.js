@@ -168,6 +168,17 @@ module.exports = function (grunt) {
       ]
     };
 
+    project.tasks.watch[client.name + '_config'] = {
+      files: [
+        path.join('<%= carnaby.appDir %>', 'core/config/*.json'),
+        path.join('<%= carnaby.appDir %>', client.name, 'config/*.json')
+      ],
+      tasks: [
+        helpers.runVendor('extend', client.name),
+        helpers.run('write-main', client.name)
+      ]
+    };
+
     //----------------------------------
     //
     // js hint
