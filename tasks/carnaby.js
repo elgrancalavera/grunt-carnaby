@@ -132,6 +132,49 @@ module.exports = function (grunt) {
 
     //----------------------------------
     //
+    // watch
+    //
+    //----------------------------------
+
+    helpers.ensureTask(project, 'watch');
+    project.tasks.watch[client.name + '_handlebars'] = {
+      files: [
+        path.join('<%= carnaby.appDir %>', 'core/templates/**/*.hbs'),
+        path.join('<%= carnaby.appDir %>', client.name, 'templates/**/*.hbs')
+      ],
+      tasks: [
+        helpers.runVendor('copy', client.name),
+        helpers.runVendor('handlebars', client.name)
+      ]
+    };
+
+    project.tasks.watch[client.name + '_jshint'] = {
+      files:[
+        path.join('<%= carnaby.appDir %>', client.name, 'scripts/**/*.js')
+      ],
+      tasks: [
+        helpers.runVendor('jshint', client.name)
+      ]
+    };
+
+    //----------------------------------
+    //
+    // js hint
+    //
+    //----------------------------------
+
+    helpers.ensureTask(project, 'jshint');
+    project.tasks.jshint[client.name] = {
+      options: {
+        jshintrc: '.jshintrc'
+      },
+      files: {
+        src: path.join('<%= carnaby.appDir %>', client.name, 'scripts/**/*.js')
+      }
+    };
+
+    //----------------------------------
+    //
     // Save: update should be handled
     // by the actual Gruntfile.
     //
@@ -273,9 +316,12 @@ module.exports = function (grunt) {
     var files = grunt.util._.map(clients, function (client) {
       return path.join(client.root, 'config', target.name + '.json');
     });
-    // core target config and .preflight artifacts
-    files.push(path.join(helpers.appDir, 'core', target.name + '.json'));
-    files.push(path.join('.preflight', target.path));
+
+    // target, core target config and .preflight artifacts
+    files = files.concat(
+      path.join(helpers.appDir, 'core', target.name + '.json'),
+      path.join('.preflight', target.path),
+      target.path);
 
     var clean = helpers.utid('clean');
     grunt.config(clean.property, files);
@@ -292,11 +338,11 @@ module.exports = function (grunt) {
     // file is updated by helpers.deleteTarget, which means that it will be
     // updated by the time when updateTasks runs.
     grunt.util._.each(clients, updateTasks);
+
     var tasks = [
       clean.task,
       'carnaby:update-config',
     ].concat(helpers.runAllClients('extend', null, true));
-
     grunt.task.run(tasks);
     grunt.log.ok();
   });
@@ -546,7 +592,7 @@ module.exports = function (grunt) {
   grunt.registerTask('carnaby:new-project', function () {
     var force = this.flags.force;
 
-    // Step 1: Create the actual project and all the project files
+    // Create the actual project and all the project files
     // derived from templates.
     var project = helpers.createProject(force);
     var templates = makeTemplateOptionsList([
@@ -570,7 +616,7 @@ module.exports = function (grunt) {
     );
     grunt.util._.each(templates, processTemplate);
 
-    // Step 2: Run all other tasks that depend on a well defined project
+    // Run all other tasks that depend on a well defined project
     // to work properly.
     var cherryPick = [
       'carnaby:vendor-cherry-pick:html5-boilerplate',
@@ -602,7 +648,7 @@ module.exports = function (grunt) {
       cherryPick,
       copyreset.task,
       cleancss.task,
-      'carnaby:new-client',
+      helpers.run('new-client'),
     ], force));
 
   });
@@ -866,7 +912,7 @@ module.exports = function (grunt) {
   });
 
   /*
-   * carnaby:clean cleans all artifacts, like "all"
+   * carnaby:clean cleans all artifacts
    */
   grunt.registerTask('carnaby:clean', function () {
     var clients = helpers.runAllClients('clean-client');

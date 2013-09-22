@@ -81,6 +81,12 @@ module.exports = function(grunt) {
         nospawn: true,
         livereload: true
       },
+      jshint_common: {
+        files: '<%= jshint.common %>',
+        tasks: [
+          'jshint:common'
+        ]
+      },
       livereload: {
         options: {
           livereload: LIVERELOAD_PORT
@@ -110,6 +116,9 @@ module.exports = function(grunt) {
       ],
       artifacts: [
         'tmp/**/*.{js,json}'
+      ],
+      common: [
+        '<%= carnaby.appDir %>/core/common/scripts/**/*.js'
       ]
     },
 
@@ -150,26 +159,17 @@ module.exports = function(grunt) {
   grunt.registerTask('carnaby:workflow', [
     'clean',
     'carnaby:new-project',
-    // mobile client comes by default
-    'carnaby:new-client:desktop',
-    'carnaby:new-client:tablet',
+    'carnaby:build',
+  ]);
+
+  grunt.registerTask('carnaby:workflow:long', [
+    'carnaby:workflow',
     'carnaby:new-client:phablet',
-    // local target comes by default
-    'carnaby:new-target:dev',
-    'carnaby:new-target:uat',
-    'carnaby:new-target:qa',
-    'carnaby:new-target:production',
+    'carnaby:new-target:s3:aws/s3:Static deployment to S3',
     'carnaby:build:all',
-    // delete some
-    'carnaby:delete-target:dev',
-    'carnaby:delete-target:uat',
-    // clean some clients
+    'carnaby:delete-target:s3',
     'carnaby:clean-client:phablet',
-    'carnaby:clean-client:mobile',
-    // build all again
-    'carnaby:build:all',
-    // clean some targets
-    'carnaby:clean-target:qa',
+    'carnaby:build:all'
   ]);
 
   grunt.registerTask('default', [
