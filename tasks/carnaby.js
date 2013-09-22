@@ -137,6 +137,7 @@ module.exports = function (grunt) {
     //----------------------------------
 
     helpers.ensureTask(project, 'watch');
+
     project.tasks.watch[client.name + '_handlebars'] = {
       files: [
         path.join('<%= carnaby.appDir %>', 'core/templates/**/*.hbs'),
@@ -149,11 +150,21 @@ module.exports = function (grunt) {
     };
 
     project.tasks.watch[client.name + '_jshint'] = {
-      files:[
+      files: [
         path.join('<%= carnaby.appDir %>', client.name, 'scripts/**/*.js')
       ],
       tasks: [
         helpers.runVendor('jshint', client.name)
+      ]
+    };
+
+    project.tasks.watch[client.name + '_compass'] = {
+      files: [
+        path.join('<%= carnaby.appDir %>', 'core/common/styles/**/*.{scss,sass}'),
+        path.join('<%= carnaby.appDir %>', client.name, 'styles/**/*.{scss,sass}')
+      ],
+      tasks: [
+        helpers.runVendor('compass', client.name)
       ]
     };
 
@@ -295,8 +306,13 @@ module.exports = function (grunt) {
     // then we need to update some of the clients tasks... and since there is
     // no other way to do it yet, I'm just updating the whole lot again.
     grunt.util._.each(clients, updateTasks);
-    grunt.task.run(['carnaby:update-config', 'extend']);
-
+    var tasks = [
+      helpers.run('update-config')
+    ].concat(
+      helpers.runAllClients('extend', null, true),
+      helpers.run('update-index')
+    );
+    grunt.task.run(tasks);
     grunt.log.ok();
   });
 
@@ -319,7 +335,7 @@ module.exports = function (grunt) {
 
     // target, core target config and .preflight artifacts
     files = files.concat(
-      path.join(helpers.appDir, 'core', target.name + '.json'),
+      path.join(helpers.appDir, 'core/config', target.name + '.json'),
       path.join('.preflight', target.path),
       target.path);
 
@@ -342,7 +358,10 @@ module.exports = function (grunt) {
     var tasks = [
       clean.task,
       'carnaby:update-config',
-    ].concat(helpers.runAllClients('extend', null, true));
+    ].concat(
+      helpers.runAllClients('extend', null, true),
+      helpers.run('update-index')
+    );
     grunt.task.run(tasks);
     grunt.log.ok();
   });
@@ -391,7 +410,7 @@ module.exports = function (grunt) {
       var dest = path.join(helpers.appDir, 'core', path.relative(vendorDir, src));
       grunt.file.copy(src, dest);
     });
-
+    grunt.log.ok();
   });
 
   /*
@@ -415,8 +434,7 @@ module.exports = function (grunt) {
       ].map(function (task) {
         return task + ':' + client.name;
       }),
-      'carnaby:write-main:' + client.name + ':' + target.name,
-      'carnaby:update-index'
+      'carnaby:write-main:' + client.name + ':' + target.name
     );
     grunt.verbose.writeflags(clientTasks, 'client tasks');
     grunt.task.run(clientTasks);
@@ -451,22 +469,24 @@ module.exports = function (grunt) {
       var property = ['handlebars', client.name, 'options'].join('.');
       grunt.config(property, handlebarsOptions());
     });
+    grunt.log.ok();
   });
 
   /*
    * carnaby:update-index updates the project index
    */
   grunt.registerTask('carnaby:update-index', function () {
-    var clients = helpers.readProject().clients;
-    grunt.verbose.writeflags(clients, 'clients');
+    var project = helpers.readProject();
     processTemplate({
       filepath: 'index.html',
       template: 'projectindex',
       force: true,
       context: {
-        clients: clients
+        clients: project.clients,
+        targets: project.targets
       }
     });
+    grunt.log.ok();
   });
 
   /*
@@ -502,6 +522,8 @@ module.exports = function (grunt) {
       options.base = '.carnaby/tmp';
       processTemplate(options);
     }
+
+    grunt.log.ok();
   });
 
   /*
@@ -510,6 +532,7 @@ module.exports = function (grunt) {
   grunt.registerTask('carnaby:template', function() {
     var options = getTemplateOptions(this);
     processTemplate(options);
+    grunt.log.ok();
   });
 
   /*
@@ -523,6 +546,7 @@ module.exports = function (grunt) {
       return template.replace(/<%/g, '{%').replace(/%>/g, '%}');
     };
     processTemplate(options);
+    grunt.log.ok();
   });
 
   /*
@@ -582,8 +606,10 @@ module.exports = function (grunt) {
 
     // Step 4: Update all artifacts for this client
     grunt.task.run(helpers.checkForce([
-      'carnaby:update-client:' + name,
+      helpers.run('update-client', name),
+      helpers.run('update-index')
     ], force));
+    grunt.log.ok();
   });
 
   /*
@@ -651,6 +677,7 @@ module.exports = function (grunt) {
       helpers.run('new-client'),
     ], force));
 
+    grunt.log.ok();
   });
 
   /*
@@ -853,6 +880,8 @@ module.exports = function (grunt) {
       copyfiles.task,
       requirejs.task
     ]);
+
+    grunt.log.ok();
   });
 
   /*
@@ -861,6 +890,7 @@ module.exports = function (grunt) {
   grunt.registerTask('carnaby:build:all', function () {
     var all = helpers.runAll('build');
     grunt.task.run(all);
+    grunt.log.ok();
   });
 
   /*
@@ -878,6 +908,7 @@ module.exports = function (grunt) {
       all = helpers.runAll('update-client');
     }
     grunt.task.run(all);
+    grunt.log.ok();
   });
 
   /*
@@ -895,6 +926,7 @@ module.exports = function (grunt) {
       path.join(target.path, '**/*')
     ]);
     grunt.task.run(clean.task);
+    grunt.log.ok();
   });
 
   /*
@@ -909,6 +941,7 @@ module.exports = function (grunt) {
       path.join('.carnaby/tmp', client.name)
     ]);
     grunt.task.run(clean.task);
+    grunt.log.ok();
   });
 
   /*
@@ -918,6 +951,7 @@ module.exports = function (grunt) {
     var clients = helpers.runAllClients('clean-client');
     var targets = helpers.runAllTargets('clean-target');
     grunt.task.run([].concat(clients, targets));
+    grunt.log.ok();
   });
 
 };

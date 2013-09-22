@@ -92,7 +92,9 @@ module.exports = function(grunt) {
           livereload: LIVERELOAD_PORT
         },
         files: [
-          'tmp/*.html'
+          'tmp/*.html',
+          '<%= carnaby.appDir %>/**/index.html',
+          '.carnaby/tmp/*/scripts/**/*.js'
         ]
       },
       dev: {
@@ -156,13 +158,12 @@ module.exports = function(grunt) {
     'carnaby:init-template:html:html-init.html',
   ]);
 
-  grunt.registerTask('carnaby:workflow', [
+  var workflow =  [
     'clean',
     'carnaby:new-project',
     'carnaby:build',
-  ]);
-
-  grunt.registerTask('carnaby:workflow:long', [
+  ];
+  var workflow_long = [
     'carnaby:workflow',
     'carnaby:new-client:phablet',
     'carnaby:new-target:s3:aws/s3:Static deployment to S3',
@@ -170,7 +171,19 @@ module.exports = function(grunt) {
     'carnaby:delete-target:s3',
     'carnaby:clean-client:phablet',
     'carnaby:build:all'
-  ]);
+  ];
+
+  grunt.registerTask('carnaby:workflow', workflow);
+
+  grunt.registerTask('carnaby:workflow:watch', workflow.concat(
+    'connect:livereload',
+    'watch'
+  ));
+
+  grunt.registerTask('carnaby:workflow:long:watch', workflow_long.concat(
+    'connect:livereload',
+    'watch'
+  ));
 
   grunt.registerTask('default', [
     'clean',
