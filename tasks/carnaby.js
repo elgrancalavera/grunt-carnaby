@@ -763,25 +763,25 @@ module.exports = function (grunt) {
 
         //----------------------------------
         //
-        // app/core/common > .preflight/target/common
+        // app/core/common > .preflight/target/client/common
         //
         //----------------------------------
         {
           expand: true,
           cwd: path.join(appdir, 'core/common'),
-          dest: path.join('.preflight', target.path, 'common'),
+          dest: path.join('.preflight', target.path, client.name, 'common'),
           src: [ 'scripts/**/*' ]
         },
 
         //----------------------------------
         //
-        // vendor > .preflight/target
+        // vendor > .preflight/target/client
         //
         //----------------------------------
         {
           expand: true,
           cwd: vendordir,
-          dest: path.join('.preflight', target.path),
+          dest: path.join('.preflight', target.path, client.name),
           src: [ '**/*.js'],
           filter: 'isFile'
         },
@@ -896,12 +896,12 @@ module.exports = function (grunt) {
       }
     });
 
-    // grunt.task.run([
-    //   clean.task,
-    //   helpers.run('update-client', client.name, target.name),
-    //   copyfiles.task,
-    //   requirejs.task
-    // ]);
+    grunt.task.run([
+      clean.task,
+      helpers.run('update-client', client.name, target.name),
+      copyfiles.task,
+      requirejs.task
+    ]);
 
     grunt.log.ok();
   });
