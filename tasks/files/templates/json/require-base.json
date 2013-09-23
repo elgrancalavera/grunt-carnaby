@@ -1,11 +1,11 @@
 {
     "paths": {
-        "common": "../../common/scripts",
-        "jquery": "../../bower_components/jquery/jquery",
-        "backbone": "../../bower_components/backbone/backbone",
-        "underscore": "../../bower_components/underscore/underscore",
-        "backbone.marionette": "../../bower_components/marionette/lib/backbone.marionette",
-        "handlebars": "../../common/scripts/helpers/handlebars-loader"
+        "common": "../common/scripts",
+        "jquery": "../bower_components/jquery/jquery",
+        "backbone": "../bower_components/backbone/backbone",
+        "underscore": "../bower_components/underscore/underscore",
+        "backbone.marionette": "../bower_components/marionette/lib/backbone.marionette",
+        "handlebars": "../common/scripts/helpers/handlebars-loader"
     },
     "shim": {
         "templates": {

@@ -112,14 +112,6 @@ exports.itemview = [
   'js/footer.js'
 ];
 
-exports.extensions = [
-  'js/header.js',
-  'js/header-amd.js',
-  'js/extensions.js',
-  'js/footer-amd.js',
-  'js/footer.js'
-];
-
 exports['handlebars-loader'] = [
   'js/header.js',
   'js/header-amd.js',

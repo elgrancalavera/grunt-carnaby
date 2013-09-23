@@ -644,7 +644,6 @@ module.exports = function (grunt) {
         // [template, destination] destination relative to base path
         ['mainapp', 'common/scripts/app.js'],
         ['appcontroller', 'common/scripts/controllers/app-controller.js'],
-        ['extensions', 'common/scripts/helpers/extensions.js'],
         ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
         ['hbssidebar', 'templates/sidebar.hbs'],
         ['commonstylesheet', 'common/styles/_common-styles.scss'],
@@ -897,12 +896,12 @@ module.exports = function (grunt) {
       }
     });
 
-    grunt.task.run([
-      clean.task,
-      helpers.run('update-client', client.name, target.name),
-      copyfiles.task,
-      requirejs.task
-    ]);
+    // grunt.task.run([
+    //   clean.task,
+    //   helpers.run('update-client', client.name, target.name),
+    //   copyfiles.task,
+    //   requirejs.task
+    // ]);
 
     grunt.log.ok();
   });

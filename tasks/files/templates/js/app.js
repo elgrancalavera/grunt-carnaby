@@ -2,12 +2,6 @@
   var _ = require('underscore');
 
   /*
-   * Extensions or modifications to prototypes of standard libraries.
-   * (Backbone, Marionette, ...)
-   */
-  require('common/helpers/extensions');
-
-  /*
    * Templates are defined in the client's configuration file, and will point
    * ultimately to the compiled templates this client only.
    */
