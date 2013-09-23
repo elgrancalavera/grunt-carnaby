@@ -36,8 +36,8 @@ module.exports = function(grunt) {
             return [
               lrSnippet,
               mountFolder(connect, '.carnaby/tmp'),
-              mountFolder(connect, grunt.config('carnaby.vendorDir')),
-              mountFolder(connect, path.join(grunt.config('carnaby.appDir') , 'core')),
+              mountFolder(connect, '.carnaby/common-symlinks'),
+              mountFolder(connect, '.carnaby/vendor-symlinks'),
               mountFolder(connect, grunt.config('carnaby.appDir'))
             ];
           }
@@ -154,7 +154,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('default', [
     'clean',
-    'jshint:dev',
+    'jshint',
     'carnaby:templates',
     'jshint:artifacts',
     'nodeunit',
@@ -165,13 +165,13 @@ module.exports = function(grunt) {
 
   grunt.registerTask('carnaby:start', [
     'carnaby:update-client:all',
-    'jshint:dev',
+    'jshint',
     'connect:livereload',
     'watch'
   ]);
 
   grunt.registerTask('start', [
-    'jshint:dev',
+    'jshint',
     'connect:livereload',
     'watch'
   ]);

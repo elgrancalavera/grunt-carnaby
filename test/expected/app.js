@@ -44,7 +44,8 @@ define(function (require, exports, module) {
    */
   appController.app.addInitializer(function (options) {
     app.content.show(new Backbone.Marionette.ItemView({
-      template: templates.content
+      template: templates.content,
+      model: new Backbone.Model(options.config)
     }));
     app.sidebar.show(new Backbone.Marionette.ItemView({
       template: templates.sidebar

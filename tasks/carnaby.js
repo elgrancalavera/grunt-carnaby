@@ -570,7 +570,7 @@ module.exports = function (grunt) {
     var name = args.shift() || helpers.defaultclientname;
     var desc = args.shift() || helpers.defaultclientdesc;
 
-    // Step 1: Create the actual client entry in the project and all the client
+    // Create the actual client entry in the project and all the client
     // files derived from templates.
     var client = helpers.createClient(name, desc, force);
     var templates = makeTemplateOptionsList([
@@ -598,7 +598,7 @@ module.exports = function (grunt) {
 
     grunt.util._.each(templates, processTemplate);
 
-    // Step 2: Once the client files are ready, add a blank configuration file
+    // Once the client files are ready, add a blank configuration file
     // for each target.
     grunt.util._.each(helpers.readProject().targets, function (target) {
       processTemplate({
@@ -609,13 +609,21 @@ module.exports = function (grunt) {
       });
     });
 
-    // Step 3: Write all the tasks needed for this client to the project file
+    // Write all the tasks needed for this client to the project file
     // this bit actually writes tasks to the project file. maybe it should be
     // handled in a separate file, specialised to write tasks and update
     // `grunt.config()`
     updateTasks(client);
 
-    // Step 4: Update all artifacts for this client
+    // Create symlinks for common code shared by all clients
+    var commonln_src = path.resolve('.', helpers.appDir, 'core');
+    var commonln_dest = path.resolve('.', '.carnaby/common-symlinks', client.name);
+    var vendorln_src = path.resolve('.', helpers.vendorDir);
+    var vendorln_dest = path.resolve('.', '.carnaby/vendor-symlinks', client.name);
+    fs.symlinkSync(commonln_src, commonln_dest);
+    fs.symlinkSync(vendorln_src, vendorln_dest);
+
+    // Update all artifacts for this client
     grunt.task.run(helpers.checkForce([
       helpers.run('update-client', name),
       helpers.run('update-index')
@@ -652,6 +660,10 @@ module.exports = function (grunt) {
       }
     );
     grunt.util._.each(templates, processTemplate);
+
+    // mkdirs to host symlinks to shared files
+    grunt.file.mkdir('.carnaby/common-symlinks');
+    grunt.file.mkdir('.carnaby/vendor-symlinks');
 
     // Run all other tasks that depend on a well defined project
     // to work properly.
