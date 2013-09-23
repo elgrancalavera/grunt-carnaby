@@ -435,6 +435,29 @@ module.exports = function (grunt) {
     var target = args.shift();
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
+
+    // Create symlinks for common code shared by all clients
+
+    // mkdirs to host symlinks to shared files
+    if (!grunt.file.exists('.carnaby/common-symlinks')) {
+      grunt.file.mkdir('.carnaby/common-symlinks');
+    }
+    if (!grunt.file.exists('.carnaby/vendor-symlinks')) {
+      grunt.file.mkdir('.carnaby/vendor-symlinks');
+    }
+
+    var commonln_src = path.resolve('.', helpers.appDir, 'core');
+    var commonln_dest = path.resolve('.', '.carnaby/common-symlinks', client.name);
+    var vendorln_src = path.resolve('.', helpers.vendorDir);
+    var vendorln_dest = path.resolve('.', '.carnaby/vendor-symlinks', client.name);
+
+    if (!grunt.file.exists(commonln_dest)) {
+      fs.symlinkSync(commonln_src, commonln_dest);
+    }
+    if (!grunt.file.exists(vendorln_dest)) {
+      fs.symlinkSync(vendorln_src, vendorln_dest);
+    }
+
     var clientTasks = [].concat(
       'carnaby:update-config',
       [
@@ -615,14 +638,6 @@ module.exports = function (grunt) {
     // `grunt.config()`
     updateTasks(client);
 
-    // Create symlinks for common code shared by all clients
-    var commonln_src = path.resolve('.', helpers.appDir, 'core');
-    var commonln_dest = path.resolve('.', '.carnaby/common-symlinks', client.name);
-    var vendorln_src = path.resolve('.', helpers.vendorDir);
-    var vendorln_dest = path.resolve('.', '.carnaby/vendor-symlinks', client.name);
-    fs.symlinkSync(commonln_src, commonln_dest);
-    fs.symlinkSync(vendorln_src, vendorln_dest);
-
     // Update all artifacts for this client
     grunt.task.run(helpers.checkForce([
       helpers.run('update-client', name),
@@ -659,10 +674,6 @@ module.exports = function (grunt) {
       }
     );
     grunt.util._.each(templates, processTemplate);
-
-    // mkdirs to host symlinks to shared files
-    grunt.file.mkdir('.carnaby/common-symlinks');
-    grunt.file.mkdir('.carnaby/vendor-symlinks');
 
     // Run all other tasks that depend on a well defined project
     // to work properly.
@@ -960,7 +971,8 @@ module.exports = function (grunt) {
     var client = helpers.readClient(args.shift() || helpers.defaultclientname);
     var clean = helpers.utid('clean');
     grunt.config(clean.property, [
-      path.join('.carnaby/tmp', client.name)
+      path.join('.carnaby/tmp', client.name),
+      path.join('.carnaby/*-symlinks', client.name)
     ]);
     grunt.task.run(clean.task);
     grunt.log.ok();
