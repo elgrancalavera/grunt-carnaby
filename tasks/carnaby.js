@@ -48,7 +48,7 @@ module.exports = function (grunt) {
     project.tasks.copy[client.name] = {
       files: [{
         expand: true,
-        cwd: '<%= carnaby.appDir %>/common/templates',
+        cwd: '<%= carnaby.appDir %>/core/common/templates',
         src: ['**'],
         dest: dest
       }, {
