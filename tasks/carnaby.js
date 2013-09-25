@@ -48,7 +48,7 @@ module.exports = function (grunt) {
     project.tasks.copy[client.name] = {
       files: [{
         expand: true,
-        cwd: '<%= carnaby.appDir %>/core/common/templates',
+        cwd: '<%= carnaby.appDir %>/core/templates',
         src: ['**'],
         dest: dest
       }, {
@@ -986,6 +986,23 @@ module.exports = function (grunt) {
     var targets = helpers.runAllTargets('clean-target');
     grunt.task.run([].concat(clients, targets));
     grunt.log.ok();
+  });
+
+  /*
+   * carnaby:update-tasks[:client] updates the tasks for a client
+   *  defaults to carnaby:update-tasks:mobile
+   */
+  grunt.registerTask('carnaby:update-tasks', function () {
+    var args = helpers.removeFlags(this.args);
+    var client = helpers.readClient(args.shift() || helpers.defaultclientname);
+    updateTasks(client);
+  });
+
+  /*
+   * carnaby:update-tasks:all updates the tasks for all clients
+   */
+  grunt.registerTask('carnaby:udpate-tasks:all', function () {
+    grunt.task.run(helpers.runAllClients('update-tasks'));
   });
 
 };
