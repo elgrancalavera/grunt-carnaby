@@ -9,8 +9,6 @@
 'use strict';
 var path = require('path');
 var fs = require('fs');
-var LIVERELOAD_PORT = 35729;
-var lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT});
 
 module.exports = function (grunt) {
   var helpers = require('./lib/helpers').init(grunt);
@@ -355,7 +353,7 @@ module.exports = function (grunt) {
     grunt.log.writeflags(files, 'deleting files');
 
     if (dry) {
-      grunt.log.writeln('Stopping before deleting files are requested.'.yellow);
+      grunt.log.writeln('Stopping before deleting files as requested.'.yellow);
       return grunt.log.ok();
     }
 
@@ -499,7 +497,7 @@ module.exports = function (grunt) {
     grunt.util._.each(clients, function (client) {
       // manually set the handlebars options for each client, b/c
       // handlebars options are generated with a function, which can't be
-      // saved in the projec.json file
+      // saved in the project.json file
       var property = ['handlebars', client.name, 'options'].join('.');
       grunt.config(property, handlebarsOptions());
     });
@@ -665,6 +663,7 @@ module.exports = function (grunt) {
         ['blankstylesheet', 'common/styles/_common-variables.scss'],
         ['blankstylesheet', 'common/styles/_common-mixins.scss'],
         ['requirebase', 'config/base.json'],
+        ['requiretarget', 'config/local.json']
       ],
       // base path (relative to helpers.appDir)
       'core',
