@@ -19,7 +19,7 @@ exports.init = function (grunt) {
   var targetDir = grunt.config('carnaby.targetDir') || grunt.config('carnaby.targetDir', '.');
   var bowerDir = grunt.config('carnaby.bowerDir') || 'bower_components';
   var vendorDir = grunt.config('carnaby.vendorDir') || grunt.config('carnaby.vendorDir', 'vendor');
-  var filesdir = path.join(__dirname, '..', 'files');
+  var templatesdir = path.join(__dirname, '..', 'templates');
   var projectfile = '.carnaby/project.json';
   var defaultclientname = 'mobile';
   var defaulttargetname = 'local';
@@ -38,7 +38,7 @@ exports.init = function (grunt) {
       grunt.fatal('Unknown template definition: "' + name + '"');
     }
     return grunt.util._.reduce(definition, function (txt, filepath) {
-      return txt + grunt.file.read(path.join(filesdir, 'templates', filepath));
+      return txt + grunt.file.read(path.join(templatesdir, filepath));
     }, '');
   };
 
