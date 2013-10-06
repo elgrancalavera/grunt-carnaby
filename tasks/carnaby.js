@@ -656,6 +656,7 @@ module.exports = function (grunt) {
     var templates = makeTemplateOptionsList([
         // [template, destination] destination relative to base path
         ['mainapp', 'common/scripts/app.js'],
+        ['amd', 'common/scripts/helpers/extensions.js'],
         ['appcontroller', 'common/scripts/controllers/app-controller.js'],
         ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
         ['hbssidebar', 'templates/sidebar.hbs'],

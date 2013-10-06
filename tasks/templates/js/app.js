@@ -1,5 +1,5 @@
 
-  var _ = require('underscore');
+  require('common/helpers/extensions')
 
   /*
    * Templates are defined in the client's configuration file, and will point
