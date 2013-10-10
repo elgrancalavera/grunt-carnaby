@@ -8,11 +8,14 @@
 define(function (require, exports, module) {
   'use strict';
 
-  var _ = require('underscore');
+  /*
+   * Extensions to prototypes from loaded libraries (Backbone, Marionette...)
+   */
+  require('common/helpers/extensions');
 
   /*
    * Templates are defined in the client's configuration file, and will point
-   * ultimately to the compiled templates this client only.
+   * ultimately to the compiled templates for this client.
    */
   var templates = require('templates');
 
@@ -46,13 +49,16 @@ define(function (require, exports, module) {
     }));
   });
 
+  /*
+   * Anything that should be done after the application starts.
+   */
   appController.app.on('start', function (options) {
 
   });
 
   /*
    * Finally we can start the application, passing any module specific
-   * configuration, as well as the correct set of templates.
+   * configuration.
    */
   appController.app.start({
     config: module.config()
