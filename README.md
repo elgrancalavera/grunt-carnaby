@@ -6,7 +6,7 @@
 
 There's no docuemntation yet, and the API will continue changing aggressively. Feel free to look around, but don't expect things to work all the time.
 
-Available tasks:
+##Available tasks
 ```
          carnaby:new-project  Generates a new carnaby project.
           carnaby:new-client  [:cient] Generates a carnaby client application.
@@ -80,7 +80,7 @@ Available tasks:
                               clientstylesheet
                               blankstylesheet
 
-       carnaby:init-template  Custom task.
+       carnaby:init-template  (deprecated).
                carnaby:build  [:client][:target] Builds a client for a
                               particular deployment target. Defaults to
                               :mobile:local.
