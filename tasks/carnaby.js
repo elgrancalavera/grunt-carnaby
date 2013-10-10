@@ -124,6 +124,7 @@ module.exports = function (grunt) {
         fontsDir: path.join(commonbase, 'fonts'),
         javascriptsDir: path.join(srcbase, 'scripts'),
         importPath: commonbase,
+        generatedImagesDir: path.join(dstbase, 'images'),
         relativeAssets: true
       }
     };
@@ -660,7 +661,7 @@ module.exports = function (grunt) {
         ['appcontroller', 'common/scripts/controllers/app-controller.js'],
         ['handlebars-loader', 'common/scripts/helpers/handlebars-loader.js'],
         ['hbssidebar', 'templates/sidebar.hbs'],
-        ['commonstylesheet', 'common/styles/_common-styles.scss'],
+        ['commonstylesheet', 'common/styles/_common.scss'],
         ['blankstylesheet', 'common/styles/_common-variables.scss'],
         ['blankstylesheet', 'common/styles/_common-mixins.scss'],
         ['requirebase', 'config/base.json'],
@@ -697,7 +698,7 @@ module.exports = function (grunt) {
         dest: path.join(stylesdir, '_normalize.scss')
       }, {
         src: path.join(cssdir, 'main.css'),
-        dest: path.join(stylesdir, '_base.scss')
+        dest: path.join(stylesdir, '_html5bp.scss')
       }]
     });
 
