@@ -782,6 +782,44 @@ module.exports = function (grunt) {
 
   //----------------------------------
   //
+  // carnaby:delete-client
+  //
+  //----------------------------------
+
+  grunt.registerTask('carnaby:delete-client', td(
+
+    ':client(:dry-run) Deletes the specified client application.'
+
+    ), function () {
+
+    var args = helpers.removeFlags(this.args);
+    var dry = this.flags['dry-run'];
+
+    var clientName = args.shift();
+    if (!clientName) {
+      grunt.fatal('Please specify which client you want to delete.');
+    }
+    var client =  helpers.deleteClient(clientName, dry);
+    var files = path.join(client.root, '**/*');
+    grunt.log.writeflags(grunt.file.expand(files), 'deleting files');
+    if (dry) {
+      grunt.log.writeln('Stopping before deleting files as requested.'.yellow);
+      return grunt.log.ok();
+    }
+
+    var cleanHelp = cleanHelper(client.name);
+    var clean = helpers.utid('clean');
+    grunt.config(clean.property, client.root);
+
+    grunt.task.run([
+      cleanHelp.task,
+      clean.task,
+    ]);
+
+  });
+
+  //----------------------------------
+  //
   // carnaby:new-project
   //
   //----------------------------------
@@ -1107,6 +1145,21 @@ module.exports = function (grunt) {
   // carnaby:clean-client
   //
   //----------------------------------
+
+  // because sometimes you want to clean a dead client.
+  var cleanHelper = function (clientName) {
+    var clean = helpers.utid('clean');
+    grunt.config(clean.property, [
+      path.join(helpers.tmpDir, clientName),
+      path.join('<%= carnaby.symlinks.common %>', clientName),
+      path.join('<%= carnaby.symlinks.vendor %>', clientName),
+      path.join('<%= carnaby.targetDir %>/**/', clientName),
+      path.join('.preflight/**', clientName),
+    ]);
+
+    return clean;
+  };
+
   grunt.registerTask('carnaby:clean-client', td(
 
     '[:client] Cleans all the artifacts for a client. Defaults to ":mobile".'
@@ -1114,12 +1167,7 @@ module.exports = function (grunt) {
     ), function () {
     var args = helpers.removeFlags(this.args);
     var client = helpers.readClient(args.shift() || helpers.defaultclientname);
-    var clean = helpers.utid('clean');
-    grunt.config(clean.property, [
-      path.join(helpers.tmpDir, client.name),
-      path.join('<%= carnaby.symlinks.common %>', client.name),
-      path.join('<%= carnaby.symlinks.vendor %>', client.name),
-    ]);
+    var clean = cleanHelper(client.name);
     grunt.task.run(clean.task);
     grunt.log.ok();
   });

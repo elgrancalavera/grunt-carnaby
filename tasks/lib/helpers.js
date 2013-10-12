@@ -217,6 +217,7 @@ exports.init = function (grunt) {
 
     grunt.log.writeflags(target, 'deleting target');
 
+
     if (dry) {
       grunt.log.writeln('Stopping before saving changes to project.json as requested.'.yellow);
       return target;
@@ -225,6 +226,52 @@ exports.init = function (grunt) {
     delete project.targets[name];
     saveProject(project);
     return target;
+  };
+
+  exports.deleteClient = function (name, dry) {
+    var client = readClient(name);
+    var project = readProject();
+
+    if (_.keys(project.clients).length === 1) {
+      grunt.fatal('\nThere is only one (1) client appplication remaining in ' +
+        'your project.\nCarnaby requires at least one (1) client application.' +
+        '\nAborting.');
+    }
+
+    grunt.log.writeflags(client, 'deleting client');
+
+    var tasks = _.reduce(_.keys(project.tasks), function (memo, task) {
+      var client_tasks = _.reduce(_.keys(project.tasks[task]), function (_memo, _task) {
+        var search = _task.search(new RegExp(client.name));
+        if (search > -1) {
+          _memo.push([[task], [_task]]);
+        }
+        return _memo;
+      }, []);
+      if (client_tasks.length) {
+        memo = memo.concat(client_tasks);
+      }
+      return memo;
+    }, []);
+
+    _.each(tasks, function (task) {
+      var _task = project.tasks[task[0]][task[1]];
+      grunt.log.writeflags(_task, 'deleting task');
+      if (dry) {
+        grunt.log.writeln('Stopping before saving changes to project.json as requested.'.yellow);
+      } else {
+        delete project.tasks[task[0]][task[1]];
+      }
+    });
+
+    if (dry) {
+      grunt.log.writeln('Stopping before saving changes to project.json as requested.'.yellow);
+      return client;
+    }
+
+    delete project.clients[name];
+    saveProject(project);
+    return client;
   };
 
   exports.utid = function (task) {
