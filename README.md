@@ -8,56 +8,115 @@ There's no complete documentation yet, and the API will continue changing aggres
 
 ##Available tasks
 ```
-         carnaby:new-project  Generates a new carnaby project.
-          carnaby:new-client  [:cient] Generates a carnaby client application.
-                              Defaults to :mobile.
+                  carnaby:ls  [:property] Lists properties in
+                              ".carnaby/project.json". Defaults to list all the
+                              project's properties.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
           carnaby:new-target  :name:path[:description] Generates a deployment
-                              target. :path is relative to the grunt project
-                              root.
-       carnaby:delete-target  :name[:dry-run]Deletes an existing deployment
-                              target. :dry-run (flag) outputs the results of
-                              this operation without actually deleting
-                              anything.
-  carnaby:vendor-cherry-pick  :vendor:file[:file_n][:force] Cherry picks files
-                              from a given vendor within the bower_components
-                              directory and makes them part of the common code
-                              under version control.
+                              target.
+                              :path is relative to <% carnaby.targetDir %>.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+       carnaby:delete-target  :name(:dry-run) Deletes an existing deployment
+                              target.
+                              :dry-run Outputs the results of this operation
+                              without actually deleting anything.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+  carnaby:vendor-cherry-pick  :vendor:file[:file_n](:force) Cherry picks vendor
+                              files from
+                              "<%= carnaby.bowerDir %>" and copies them to
+                              "<%= carnaby.appDir %>/core/common", which is kept
+                              under version control. This is intended to
+                              provide an easy way to incorporate third party
+                              code into the project.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
        carnaby:update-client  [:client][:target] Updates a client's generated
-                              files for a particular target. Defaults to
-                              :mobile:local.
-   carnaby:update-client:all  [:target] Updates all clients for a particular
-                              deployment target. Defaults to :local.
-       carnaby:update-config  Updates grunt.config() with all the entries from
-                              .carnby/project.json
-        carnaby:update-index  Updates the project index.html file.
+                              files for a given target. Defaults to
+                              ":mobile:local".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+   carnaby:update-client:all  [:target] Updates all clients for a given
+                              deployment target. Defaults to ":local".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+       carnaby:update-config  Updates "grunt.config()" with all the entries
+                              from ".carnaby/project.json"
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+        carnaby:update-index  Updates "<%= carnaby.appDir %>/index.html".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
           carnaby:write-main  [:client][:target] Writes a client's main.js file
-                              for a particular target. Defaults to
-                              :mobile:local.
-            carnaby:template  :template-name:path Writes a file with the
-                              specified carnaby template to the specified path.
-                              :path is realtive to carnaby.appDir.
+                              for a given target. Defaults to ":mobile:local".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+            carnaby:template  :name:path Writes a file with the specified
+                              carnaby template to ":path". ":path" is realtive
+                              to "<%= carnaby.appDir %>.
+
                               Most of these templates are used internally by
-                              carnaby to generate clients and projects, and it
-                              makes little to no sense to use them directly in
-                              a project, but some of them can be useful, for
-                              instance "sugar".
+                              carnaby to generate client and project files, and
+                              it makes little to no sense to use them directly
+                              in a project, but some of them can be useful, for
+                              instance "amd"
+
+                              Usage example:
+
+                              grunt
+                              carnaby:template:amd:mobile/scripts/sugar.js
+
+                              Will write the following file using the values
+                              from "package.json":
+
+                              /*
+                               * grunt-carnaby
+                               * mobile/scripts/sugar.js
+                               * git://github.com/elgrancalavera/grunt-carnaby.git
+                               * Copyright (c) 2013 M&C Saatchi
+                               * mcsaatchi.com
+                               */
+                              define(function (require, exports, module) {
+                                'use strict';
+                                return exports;
+                              });
 
                               Available template names by category:
 
-                              JSON
-                              ----
+                              JSON (.json)
+                              ------------
                               requirebase
                               requiretarget
                               project
 
-                              Handlebars
-                              ----------
+                              Handlebars (.hbs)
+                              -----------------
                               hbs
                               hbssidebar
                               hbsclient
 
-                              JS
-                              --
+                              JS (.js)
+                              --------
                               def
                               amd
                               sugar
@@ -68,33 +127,74 @@ There's no complete documentation yet, and the API will continue changing aggres
                               itemview
                               handlebars-loader
 
-                              HTML
-                              ----
+                              HTML (.html)
+                              ------------
                               html
                               index
                               projectindex
 
-                              SCSS
-                              ----
+                              SASS (.scss)
+                              ------------
                               commonstylesheet
                               clientstylesheet
                               blankstylesheet
 
-       carnaby:init-template  (deprecated).
-               carnaby:build  [:client][:target] Builds a client for a
-                              particular deployment target. Defaults to
-                              :mobile:local.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+          carnaby:new-client  [:name][:description](:force) Generates a carnaby
+                              client application. Defaults to ":mobile".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+         carnaby:new-project  (:force) Generates a new carnaby project,
+                              including a default mobile client.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+               carnaby:build  [:client][:target] Builds a client for a given
+                              deployment target. Defaults to ":mobile:local".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
            carnaby:build:all  Builds all clients for all targets.
-        carnaby:clean-target  [:target] Cleans all artifacts for a target,
-                              including requirejs .preflight files. Leaves the
-                              target directory in place to allow GitHub
-                              Pagesstyle deployments (keeping .git in place).
-                              Defaults to :local.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
+        carnaby:clean-target  [:target] Cleans all artifacts for a build
+                              target. Leaves the target directory in place but
+                              deletes its contents, allowing GitHub Pages
+                              (http://pages.github.com) style deployments.
+                              Defaults to ":local".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
         carnaby:clean-client  [:client] Cleans all the artifacts for a client.
-                              Defaults to :mobile.
+                              Defaults to ":mobile".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
                carnaby:clean  Cleans all artifacts for all clients and all
                               targets.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
         carnaby:update-tasks  [:client] Updates the tasks for a client.
-                              Defaults to :mobile.
+                              Defaults to ":mobile".
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
+
     carnaby:udpate-tasks:all  Updates the tasks for all clients.
+                              -------------------------------
+                               :required [:optional] (:flag)
+                              -------------------------------
 ```

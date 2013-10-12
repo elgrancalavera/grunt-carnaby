@@ -412,7 +412,7 @@ module.exports = function (grunt) {
 
     ':vendor:file[:file_n](:force) Cherry picks vendor files from',
     '"<%= carnaby.bowerDir %>" and copies them to',
-    '"<%= carnaby.appDir %>core/common", which is kept under version control. This is intended to provide an easy way to incorporate third party code into the project.'
+    '"<%= carnaby.appDir %>/core/common", which is kept under version control. This is intended to provide an easy way to incorporate third party code into the project.'
 
     ), function () {
     var args = helpers.removeFlags(this.args);
