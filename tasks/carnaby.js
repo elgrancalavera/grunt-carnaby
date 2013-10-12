@@ -252,16 +252,27 @@ module.exports = function (grunt) {
   // Tasks
   //
   //--------------------------------------------------------------------------
+
   var taskdesc = '';
-  /*
-   * carnaby:ls[:property] A proxy for grunt.log.writeflags
-   */
+  var td = function () {
+    var args = _.toArray(arguments);
+    args.push('-------------------------------');
+    args.push(' :required [:optional] (:flag)');
+    args.push('-------------------------------');
+    args.push('');
+    return helpers.argsToStringMaker('\n').apply(null, args);
+  };
 
-  taskdesc = '[:property] ' +
-    'Lists properties in the carnaby project.json file. ' +
-    'Will list the whole project by default.';
+  //----------------------------------
+  //
+  // carnaby:ls
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:ls', td(
 
-  grunt.registerTask('carnaby:ls', taskdesc, function () {
+    '[:property] Lists properties in ".carnaby/project.json". Defaults to list all the project\'s properties.'
+
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var project = helpers.readProject();
     var prop = args.shift();
@@ -283,16 +294,17 @@ module.exports = function (grunt) {
     grunt.log.writeflags(obj, msg);
   });
 
-  /*
-   * carnaby:new-target:name:path[:description][:force] Generates a deployment
-   *  target. :path is relative to the grunt project root.
-   */
+  //----------------------------------
+  //
+  // carnaby:new-target
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:new-target', td(
 
-  taskdesc = ':name:path[:description] ' +
-    'Generates a deployment target. ' +
-    ':path is relative to the grunt project root.';
+    ':name:path[:description] Generates a deployment target. ',
+    ':path is relative to <% carnaby.targetDir %>.'
 
-  grunt.registerTask('carnaby:new-target', taskdesc, function () {
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var force = this.flags.force;
     var name = args.shift();
@@ -335,18 +347,18 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:delete-target:name[:dry-run] Deletes an existing deployment target.
-   *  :dry-run outputs the results of this operation without actually deleting
-   *  anything.
-   */
 
-  taskdesc = ':name[:dry-run]' +
-    'Deletes an existing deployment target. ' +
-    ':dry-run (flag) outputs the results of this operation without actually ' +
-    'deleting anything.';
+  //----------------------------------
+  //
+  // carnaby:delete-target
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:delete-target', td(
 
-  grunt.registerTask('carnaby:delete-target', taskdesc, function () {
+  ':name(:dry-run) Deletes an existing deployment target.',
+  ':dry-run Outputs the results of this operation without actually deleting anything.'
+
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var dry = this.flags['dry-run'];
     var name = args.shift();
@@ -391,16 +403,18 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:vendor-cherry-pick:vendor:file[:file_n][:force] Cherry picks files from a given
-   * vendor and makes them part of the common code under version control
-   */
+  //----------------------------------
+  //
+  // carnaby:vendor-cherry-pick
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:vendor-cherry-pick', td(
 
-  taskdesc = ':vendor:file[:file_n][:force] ' +
-    'Cherry picks files from a given vendor within the bower_components ' +
-    'directory and makes them part of the common code under version control.';
+    ':vendor:file[:file_n](:force) Cherry picks vendor files from',
+    '"<%= carnaby.bowerDir %>" and copies them to',
+    '"<%= carnaby.appDir %>core/common", which is kept under version control. This is intended to provide an easy way to incorporate third party code into the project.'
 
-  grunt.registerTask('carnaby:vendor-cherry-pick', taskdesc, function () {
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var force = this.flags.force;
     var vendor = args.shift();
@@ -443,16 +457,16 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:update-client[:client][:target] updates the generated files for a client
-   * defaults to carnaby:update-client:mobile:local
-   */
+  //----------------------------------
+  //
+  // carnaby:udpate-client
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:update-client', td(
 
-  taskdesc = '[:client][:target] ' +
-    'Updates a client\'s generated files for a particular target. ' +
-    'Defaults to :mobile:local.';
+    '[:client][:target] Updates a client\'s generated files for a given target. Defaults to ":mobile:local".'
 
-  grunt.registerTask('carnaby:update-client', taskdesc, function () {
+    ), function () {
     var force = this.flags.force;
     var args = helpers.removeFlags(this.args);
     var client = args.shift();
@@ -500,14 +514,17 @@ module.exports = function (grunt) {
     grunt.task.run(clientTasks);
   });
 
-  /*
-   * carnaby:update-client:all[:target] updates all clients
-   * defaults to carnaby:all:local
-   */
-  taskdesc = '[:target] Updates all clients for a particular deployment ' +
-    'target. Defaults to :local.';
+  //----------------------------------
+  //
+  // caranby:update-client:all
+  //
+  //----------------------------------
 
-  grunt.registerTask('carnaby:update-client:all', taskdesc, function () {
+  grunt.registerTask('carnaby:update-client:all', td(
+
+    '[:target] Updates all clients for a given deployment target. Defaults to ":local".'
+
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var target = args.shift();
     var all;
@@ -521,15 +538,16 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:update-config updates the main grunt config file. We just update the
-   * grunt config but we don't run the tasks. Once grunt is done, config
-   * will be out of date again.
-   */
-  taskdesc = 'Updates grunt.config() with all the entries from ' +
-    ' .carnby/project.json';
+  //----------------------------------
+  //
+  // carnaby:update-config
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:update-config', td(
 
-  grunt.registerTask('carnaby:update-config', taskdesc, function () {
+    'Updates "grunt.config()" with all the entries from ".carnaby/project.json"'
+
+    ), function () {
     var project = helpers.readProject();
     var tasks = project.tasks;
     var clients = project.clients;
@@ -556,13 +574,16 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
+  //----------------------------------
+  //
+  // carnaby:update-index
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:update-index', td(
 
-  /*
-   * carnaby:update-index updates the project index
-   */
-  taskdesc = 'Updates the project index.html file.';
+    'Updates "<%= carnaby.appDir %>/index.html".'
 
-  grunt.registerTask('carnaby:update-index', taskdesc, function () {
+    ), function () {
     var project = helpers.readProject();
     processTemplate({
       filepath: 'index.html',
@@ -576,15 +597,16 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:write-main[:client][:target] writes a main.js file
-   * defaults to carnaby:write-main:mobile:local
-   */
-  taskdesc = '[:client][:target] ' +
-    'Writes a client\'s main.js file for a particular target. ' +
-    'Defaults to :mobile:local.';
+  //----------------------------------
+  //
+  // carnaby:write-main
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:write-main', td(
 
-  grunt.registerTask('carnaby:write-main', taskdesc, function () {
+    '[:client][:target] Writes a client\'s main.js file for a given target. Defaults to ":mobile:local".'
+
+    ), function () {
     this.requires(['carnaby:update-config']);
     var args = helpers.removeFlags(this.args);
     var client = args.shift() || helpers.defaultclientname;
@@ -617,68 +639,89 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:template carnaby template task
-   */
-  taskdesc = ':template-name:path Writes a file with the specified carnaby ' +
-    'template to the specified path. :path is realtive to carnaby.appDir. ' +
-    '\nMost of these templates are used internally by carnaby to generate ' +
-    'clients and projects, and it makes little to no sense to use them ' +
-    'directly in a project, but some of them can be useful, for instance ' +
-    '"sugar".\n' +
-    '\nAvailable template names by category:\n' +
+  //----------------------------------
+  //
+  // carnaby:template
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:template', td(
+    ':name:path Writes a file with the specified carnaby template to ":path". ":path" is realtive to "<%= carnaby.appDir %>. ',
+    '',
+    'Most of these templates are used internally by carnaby to generate client and project files, and it makes little to no sense to use them directly in a project, but some of them can be useful, for instance "amd"',
+    '',
+    'Usage example:',
+    '',
+    'grunt carnaby:template:amd:mobile/scripts/sugar.js',
+    '',
+    'Will write the following file using the values from "package.json":',
+    '',
+    '/*',
+    ' * grunt-carnaby',
+    ' * mobile/scripts/sugar.js',
+    ' * git://github.com/elgrancalavera/grunt-carnaby.git',
+    ' * Copyright (c) 2013 M&C Saatchi',
+    ' * mcsaatchi.com',
+    ' */',
+    'define(function (require, exports, module) {',
+    '  \'use strict\';',
+    '  return exports;',
+    '});',
 
-    '\nJSON\n' +
-    '----\n' +
-    'requirebase\n' +
-    'requiretarget\n' +
-    'project\n' +
-
-    '\nHandlebars\n' +
-    '----------\n' +
-    'hbs\n' +
-    'hbssidebar\n' +
-    'hbsclient\n' +
-
-    '\nJS\n' +
-    '--\n' +
-    'def\n' +
-    'amd\n' +
-    'sugar\n' +
-    'mainapp\n' +
-    'app\n' +
-    'appcontroller\n' +
-    'main\n' +
-    'itemview\n' +
-    'handlebars-loader\n' +
-
-    '\nHTML\n' +
-    '----\n' +
-    'html\n' +
-    'index\n' +
-    'projectindex\n' +
-
-    '\nSCSS\n' +
-    '----\n' +
-    'commonstylesheet\n' +
-    'clientstylesheet\n' +
-    'blankstylesheet\n';
-
-
-  grunt.registerTask('carnaby:template', taskdesc, function() {
+    '',
+    'Available template names by category:',
+    '',
+    'JSON (.json)',
+    '------------',
+    'requirebase',
+    'requiretarget',
+    'project',
+    '',
+    'Handlebars (.hbs)',
+    '-----------------',
+    'hbs',
+    'hbssidebar',
+    'hbsclient',
+    '',
+    'JS (.js)',
+    '--------',
+    'def',
+    'amd',
+    'sugar',
+    'mainapp',
+    'app',
+    'appcontroller',
+    'main',
+    'itemview',
+    'handlebars-loader',
+    '',
+    'HTML (.html)',
+    '------------',
+    'html',
+    'index',
+    'projectindex',
+    '',
+    'SASS (.scss)',
+    '------------',
+    'commonstylesheet',
+    'clientstylesheet',
+    'blankstylesheet',
+    ''
+    ), function() {
     var options = getTemplateOptions(this);
     processTemplate(options);
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:new-client[:client] generates a carnaby client application
-   * defaults to carnaby:new-client:mobile
-   */
-  taskdesc = '[:cient] Generates a carnaby client application. ' +
-    'Defaults to :mobile.';
+  //----------------------------------
+  //
+  // carnaby:new-client
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:new-client', td(
 
-  grunt.registerTask('carnaby:new-client', taskdesc, function () {
+    '[:name][:description](:force) Generates a carnaby client application. Defaults to ":mobile".'
+
+    ), function () {
     var force = this.flags.force;
     var args = helpers.removeFlags(this.args);
     var name = args.shift() || helpers.defaultclientname;
@@ -737,12 +780,16 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:new-project
-   */
-  taskdesc = 'Generates a new carnaby project.';
+  //----------------------------------
+  //
+  // carnaby:new-project
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:new-project', td(
 
-  grunt.registerTask('carnaby:new-project', taskdesc, function () {
+    '(:force) Generates a new carnaby project, including a default mobile client.'
+
+    ), function () {
     var force = this.flags.force;
 
     // Create the actual project and all the project files
@@ -808,14 +855,16 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:build[:client][:target] Builds one client for one target
-   *  defaults to carnaby:build:mobile:local
-   */
-  taskdesc = '[:client][:target] Builds a client for a particular deployment ' +
-  'target. Defaults to :mobile:local.';
+  //----------------------------------
+  //
+  // carnaby:build
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:build', td(
 
-  grunt.registerTask('carnaby:build', taskdesc, function () {
+    '[:client][:target] Builds a client for a given deployment target. Defaults to ":mobile:local".'
+
+    ), function () {
 
     //----------------------------------
     //
@@ -1015,29 +1064,32 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:build:all Builds all clients for all targets
-   */
 
-  taskdesc = 'Builds all clients for all targets.';
+  //----------------------------------
+  //
+  // carnaby:build:all
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:build:all', td(
 
-  grunt.registerTask('carnaby:build:all', taskdesc, function () {
+    'Builds all clients for all targets.'
+
+    ), function () {
     var all = helpers.runAll('build');
     grunt.task.run(all);
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:clean-target[:target] cleans all the artifacts for a target, including
-   * preflight files. Leaves the target dir in place to allow GitHub style
-   * deployments (keeping .git in place)
-   * defaults to carnaby:clean-target:local
-   */
-  taskdesc = '[:target] Cleans all artifacts for a target, including requirejs ' +
-    '.preflight files. Leaves the target directory in place to allow GitHub Pages' +
-    'style deployments (keeping .git in place). Defaults to :local.';
+  //----------------------------------
+  //
+  // carnaby:clean-target
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:clean-target', td(
 
-  grunt.registerTask('carnaby:clean-target', taskdesc, function () {
+    '[:target] Cleans all artifacts for a build target. Leaves the target directory in place but deletes its contents, allowing GitHub Pages (http://pages.github.com) style deployments. Defaults to ":local".'
+
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var target = helpers.readTarget(args.shift() || helpers.defaulttargetname);
     var clean = helpers.utid('clean');
@@ -1049,15 +1101,17 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:clean-client[:client] cleans all the artifacts for a client
-   * defaults to carnaby:clean-client:mobile
-   */
 
-  taskdesc = '[:client] Cleans all the artifacts for a client. Defaults to ' +
-    ':mobile.';
+  //----------------------------------
+  //
+  // carnaby:clean-client
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:clean-client', td(
 
-  grunt.registerTask('carnaby:clean-client', taskdesc, function () {
+    '[:client] Cleans all the artifacts for a client. Defaults to ":mobile".'
+
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var client = helpers.readClient(args.shift() || helpers.defaultclientname);
     var clean = helpers.utid('clean');
@@ -1070,35 +1124,47 @@ module.exports = function (grunt) {
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:clean cleans all artifacts
-   */
-  taskdesc = 'Cleans all artifacts for all clients and all targets.';
+  //----------------------------------
+  //
+  // carnaby:clean
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:clean', td(
 
-  grunt.registerTask('carnaby:clean', taskdesc, function () {
+    'Cleans all artifacts for all clients and all targets.'
+
+    ), function () {
     var clients = helpers.runAllClients('clean-client');
     var targets = helpers.runAllTargets('clean-target');
     grunt.task.run([].concat(clients, targets));
     grunt.log.ok();
   });
 
-  /*
-   * carnaby:update-tasks[:client] updates the tasks for a client
-   *  defaults to carnaby:update-tasks:mobile
-   */
-  taskdesc = '[:client] Updates the tasks for a client. Defaults to :mobile.';
+  //----------------------------------
+  //
+  // carnaby:update-tasks
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:update-tasks', td(
 
-  grunt.registerTask('carnaby:update-tasks', taskdesc, function () {
+    '[:client] Updates the tasks for a client. Defaults to ":mobile".'
+
+    ), function () {
     var args = helpers.removeFlags(this.args);
     var client = helpers.readClient(args.shift() || helpers.defaultclientname);
     updateTasks(client);
   });
 
-  /*
-   * carnaby:update-tasks:all updates the tasks for all clients
-   */
-  taskdesc = 'Updates the tasks for all clients.';
-  grunt.registerTask('carnaby:udpate-tasks:all', taskdesc, function () {
+  //----------------------------------
+  //
+  // carnaby:uptate-tasks:all
+  //
+  //----------------------------------
+  grunt.registerTask('carnaby:udpate-tasks:all', td(
+
+    'Updates the tasks for all clients.'
+
+    ), function () {
     grunt.task.run(helpers.runAllClients('update-tasks'));
   });
 

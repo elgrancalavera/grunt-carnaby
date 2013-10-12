@@ -70,6 +70,12 @@ exports.init = function (grunt) {
     'dry-run'
   ];
 
+  var argsToStringMaker = exports.argsToStringMaker = function (joiner) {
+    return function () {
+      return _.toArray(arguments).join(joiner || '');
+    };
+  };
+
   var readTemplate = exports.readTemplate = function (name) {
     var definition = templates[name];
     if (!definition) {
