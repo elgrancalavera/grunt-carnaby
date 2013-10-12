@@ -42,7 +42,7 @@ module.exports = function (grunt) {
     //
     //----------------------------------
 
-    dest = path.join('.carnaby/tmp', client.name, 'templates');
+    dest = path.join(helpers.tmpDir, client.name, 'templates');
     helpers.ensureTask(project, 'copy');
     project.tasks.copy[client.name] = {
       files: [{
@@ -64,9 +64,9 @@ module.exports = function (grunt) {
     //
     //----------------------------------
 
-    dest = path.join('.carnaby/tmp', client.name, 'scripts/templates.js');
+    dest = path.join(helpers.tmpDir, client.name, 'scripts/templates.js');
     files = {};
-    files[dest] = [path.join('.carnaby/tmp', client.name, 'templates/**/*.hbs')];
+    files[dest] = [path.join(helpers.tmpDir, client.name, 'templates/**/*.hbs')];
     helpers.ensureTask(project, 'handlebars');
     project.tasks.handlebars[client.name] = {
       files: files
@@ -80,7 +80,7 @@ module.exports = function (grunt) {
 
     files = {};
     helpers.ensureTask(project, 'extend');
-    dest = path.join('.carnaby/tmp', client.name, 'config');
+    dest = path.join(helpers.tmpDir, client.name, 'config');
 
     files[path.join(dest, 'local.json')] = [
       '<%= carnaby.appDir %>/core/config/base.json',
@@ -113,7 +113,7 @@ module.exports = function (grunt) {
     //----------------------------------
 
     var srcbase = path.join('<%= carnaby.appDir %>/', client.name);
-    var dstbase = path.join('.carnaby/tmp', client.name);
+    var dstbase = path.join(helpers.tmpDir, client.name);
     var commonbase = path.join('<%= carnaby.appDir %>', 'core/common/styles');
 
     helpers.ensureTask(project, 'compass');
@@ -461,19 +461,21 @@ module.exports = function (grunt) {
     target = helpers.readTarget(target);
 
     // Create symlinks for common code shared by all clients
+    var slcommon = helpers.symlinksCommon;
+    var slvendor = helpers.symlinksVendor;
 
     // mkdirs to host symlinks to shared files
-    if (!grunt.file.exists('.carnaby/common-symlinks')) {
-      grunt.file.mkdir('.carnaby/common-symlinks');
+    if (!grunt.file.exists(slcommon)) {
+      grunt.file.mkdir(slcommon);
     }
-    if (!grunt.file.exists('.carnaby/vendor-symlinks')) {
-      grunt.file.mkdir('.carnaby/vendor-symlinks');
+    if (!grunt.file.exists(slvendor)) {
+      grunt.file.mkdir(slvendor);
     }
 
     var commonln_src = path.resolve('.', helpers.appDir, 'core');
-    var commonln_dest = path.resolve('.', '.carnaby/common-symlinks', client.name);
+    var commonln_dest = path.resolve('.', slcommon, client.name);
     var vendorln_src = path.resolve('.', helpers.vendorDir);
-    var vendorln_dest = path.resolve('.', '.carnaby/vendor-symlinks', client.name);
+    var vendorln_dest = path.resolve('.', slvendor, client.name);
 
     if (!grunt.file.exists(commonln_dest)) {
       fs.symlinkSync(commonln_src, commonln_dest);
@@ -589,7 +591,7 @@ module.exports = function (grunt) {
     var target = args.shift() || helpers.defaulttargetname;
     client = helpers.readClient(client);
     target = helpers.readTarget(target);
-    var configpath = path.join('.carnaby/tmp', client.name, 'config', target.name + '.json');
+    var configpath = path.join(helpers.tmpDir, client.name, 'config', target.name + '.json');
     var destpath = path.join(client.name, 'scripts/main.js');
     var config = grunt.file.read(configpath);
     var options = {
@@ -608,7 +610,7 @@ module.exports = function (grunt) {
     // dev working on her local copy of the project, and we spit out another
     // copy of main.js in the connect's artifacts directory for convenience
     if (target.name === helpers.defaulttargetname) {
-      options.base = '.carnaby/tmp';
+      options.base = helpers.tmpDir;
       processTemplate(options);
     }
 
@@ -925,7 +927,7 @@ module.exports = function (grunt) {
         //----------------------------------
         {
           expand: true,
-          cwd: path.join('.carnaby/tmp', client.name, 'scripts'),
+          cwd: path.join(helpers.tmpDir, client.name, 'scripts'),
           dest: path.join('.preflight', target.path, client.name, 'scripts'),
           src: [ 'templates.js ']
         },
@@ -949,7 +951,7 @@ module.exports = function (grunt) {
         //----------------------------------
         {
           expand: true,
-          cwd: path.join('.carnaby/tmp', client.name),
+          cwd: path.join(helpers.tmpDir, client.name),
           dest: path.join(target.path, client.name),
           src: [ 'styles/**/*.css' ]
         },
@@ -1060,8 +1062,9 @@ module.exports = function (grunt) {
     var client = helpers.readClient(args.shift() || helpers.defaultclientname);
     var clean = helpers.utid('clean');
     grunt.config(clean.property, [
-      path.join('.carnaby/tmp', client.name),
-      path.join('.carnaby/*-symlinks', client.name)
+      path.join(helpers.tmpDir, client.name),
+      path.join('<%= carnaby.symlinks.common %>', client.name),
+      path.join('<%= carnaby.symlinks.vendor %>', client.name),
     ]);
     grunt.task.run(clean.task);
     grunt.log.ok();

@@ -16,18 +16,55 @@ exports.init = function (grunt) {
   var _ = grunt.util._;
   var exports = {};
   var config = grunt.config('carnaby');
-  var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
-  var targetDir = grunt.config('carnaby.targetDir') || grunt.config('carnaby.targetDir', '.');
-  var bowerDir = grunt.config('carnaby.bowerDir') || 'bower_components';
-  var vendorDir = grunt.config('carnaby.vendorDir') || grunt.config('carnaby.vendorDir', 'vendor');
-  var templatesdir = path.join(__dirname, '..', 'templates');
   var projectfile = '.carnaby/project.json';
+
+  var configValue = function (key, defaultValue) {
+    return grunt.config(key) || grunt.config(key, defaultValue);
+  };
+
+  //----------------------------------
+  //
+  // directories
+  //
+  //----------------------------------
+
+  var appDir          = configValue('carnaby.appDir', 'app');
+  var targetDir       = configValue('carnaby.targetDir', 'targets');
+  var vendorDir       = configValue('carnaby.vendorDir', 'vendor');
+  var bowerDir        = configValue('carnaby.bowerDir', path.join(vendorDir, 'bower_components'));
+  var tmpDir          = configValue('carnaby.tmpDir', '.tmp');
+  var symlinksCommon  = configValue('carnaby.symlinks.common', '.symlinks/common');
+  var symlinksVendor  = configValue('carnaby.symlinks.vendor', '.symlinks/vendor');
+  var templatesdir = path.join(__dirname, '..', 'templates');
+
+  //----------------------------------
+  //
+  // defaults
+  //
+  //----------------------------------
+
   var defaultclientname = 'mobile';
   var defaulttargetname = 'local';
   var defaultclientdesc = 'Another Carnaby client';
-  var abortmsg = ' Aborting.\nAppend ":force" at the end of your task call to overwrite.';
-  var overwritemsg = 'Overwriting.';
-  // flags (to be removed before using the positional arguments):
+
+  //----------------------------------
+  //
+  // messages
+  //
+  //----------------------------------
+
+  var abortmsg =
+    ' Aborting.\nAppend ":force" at the end of your task call to overwrite.';
+  var overwritemsg =
+    'Overwriting.';
+
+  //----------------------------------
+  //
+  // flags (to be removed before using
+  // positional arguments)
+  //
+  //----------------------------------
+
   var flags = [
     'force',
     'dry-run'
@@ -360,6 +397,9 @@ exports.init = function (grunt) {
   exports.bowerDir = bowerDir;
   exports.targetDir = targetDir;
   exports.vendorDir = vendorDir;
+  exports.tmpDir = tmpDir;
+  exports.symlinksCommon = symlinksCommon;
+  exports.symlinksVendor = symlinksVendor;
 
   return exports;
 };

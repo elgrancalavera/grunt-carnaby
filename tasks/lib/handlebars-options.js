@@ -7,14 +7,30 @@
  * Licensed under the MIT license.
  */
 'use strict';
+var path = require('path');
 
 exports.init = function (grunt) {
+  var helpers = require('./helpers').init(grunt);
+  var tmpdir = helpers.tmpDir;
 
-  var pathOffset = 4;
+  // 3 is the default offset, which is 3 directories away from .
+  // ./tmp_dir/[client]/templates
+  //  1       2        3
+  // \_________________/
+  //  defaultPathOffset
+  var defaultPathOffset = 3;
+
+  // nesting: how deep inside tmpdir are the templates, for instance:
+  // ./parent_dir/parent_dir/tmp_dir/[client]/templates
+  //  1          2          3       4        5
+  // \_____________________/\________________/
+  //  nesting                defaultPathOffset
+  var nesting = path.normalize(tmpdir).split('/').length  - 1;
+
+  var pathOffset = nesting + defaultPathOffset;
 
   var handlebarsFilePath = function (filepath) {
-    // The first n indices we need to skipt to reach the actual
-    // templates directory.
+    // The first n indices we need to skip to reach the templates directory
     return filepath.split('/').slice(pathOffset).join('/').replace('.hbs', '');
   };
 

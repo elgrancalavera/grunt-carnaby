@@ -17,12 +17,18 @@ var mountFolder = function (connect, dir) {
 };
 
 module.exports = function(grunt) {
+
   grunt.initConfig({
     carnaby: {
-      appDir: 'tmp',
+      appDir: 'app',
       bowerDir: grunt.file.readJSON('.bowerrc').directory,
       targetDir: 'targets',
-      vendorDir: 'vendor'
+      vendorDir: 'vendor',
+      tmpDir: '.tmp',
+      symlinks: {
+        common: '.symlinks/common',
+        vendor: '.symlinks/vendor',
+      },
     },
     connect: {
       options: {
@@ -35,10 +41,10 @@ module.exports = function(grunt) {
           middleware: function (connect) {
             return [
               lrSnippet,
-              mountFolder(connect, '.carnaby/tmp'),
-              mountFolder(connect, '.carnaby/common-symlinks'),
-              mountFolder(connect, '.carnaby/vendor-symlinks'),
-              mountFolder(connect, grunt.config('carnaby.appDir'))
+              mountFolder(connect, grunt.config('carnaby.symlinks.common')),
+              mountFolder(connect, grunt.config('carnaby.symlinks.vendor')),
+              mountFolder(connect, grunt.config('carnaby.tmpDir')),
+              mountFolder(connect, grunt.config('carnaby.appDir')),
             ];
           }
         }
@@ -85,13 +91,22 @@ module.exports = function(grunt) {
         '!**/templates/**/*',
       ],
       artifacts: [
-        'tmp/**/*.{js,json}'
+        '<%= carnaby.appDir %>/**/*.{js,json}'
       ]
     },
 
     // Before generating any new files, remove any files created previously.
     clean: {
-      all: ['tmp', '.carnaby/*', 'targets', '.preflight']
+      all: [
+        '<%= carnaby.appDir %>',
+        '<%= carnaby.targetDir %>',
+        '<%= carnaby.tmpDir %>',
+        '<%= carnaby.symlinks.common %>',
+        '<%= carnaby.symlinks.vendor %>',
+        '.carnaby/*',
+        '.preflight',
+        '.sass-cache',
+      ]
     },
 
     // Unit tests.

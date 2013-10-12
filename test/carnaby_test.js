@@ -29,7 +29,7 @@ function read(filename) {
 }
 
 function compare(filename, test) {
-  var actualFilepath = path.join('tmp', filename);
+  var actualFilepath = path.join('app', filename);
   var expectedFilepath = path.join('test', 'expected', filename);
   var actual = read(actualFilepath);
   var expected = read(expectedFilepath);
