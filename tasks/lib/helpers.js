@@ -13,6 +13,7 @@ var assert = require('assert');
 
 exports.init = function (grunt) {
 
+  var _ = grunt.util._;
   var exports = {};
   var config = grunt.config('carnaby');
   var appDir = grunt.config('carnaby.appDir') || grunt.config('carnaby.appDir', 'app');
@@ -37,13 +38,13 @@ exports.init = function (grunt) {
     if (!definition) {
       grunt.fatal('Unknown template definition: "' + name + '"');
     }
-    return grunt.util._.reduce(definition, function (txt, filepath) {
+    return _.reduce(definition, function (txt, filepath) {
       return txt + grunt.file.read(path.join(templatesdir, filepath));
     }, '');
   };
 
   var writeTemplate = exports.writeTemplate = function (dest, template, context) {
-    context = grunt.util._.extend(readPackage(), context);
+    context = _.extend(readPackage(), context);
     grunt.file.write(dest, grunt.template.process(template, {data: context}));
     grunt.log.ok('File "%s" written.', dest);
   };
@@ -71,13 +72,13 @@ exports.init = function (grunt) {
   };
 
   exports.checkForce = function (tasks, force) {
-    return grunt.util._.map(tasks, function (task) {
+    return _.map(tasks, function (task) {
       return force ? task + ':force' : task;
     });
   };
 
   exports.removeFlags = function (args) {
-    return grunt.util._.without.apply(null, [].concat([args], flags));
+    return _.without.apply(null, [].concat([args], flags));
   };
 
   var readProject = exports.readProject = function () {
@@ -144,7 +145,7 @@ exports.init = function (grunt) {
       grunt.log.writeln((existsmsg + overwritemsg).yellow);
     }
 
-    grunt.util._.each(targets, function (target, key) {
+    _.each(targets, function (target, key) {
       if (target.path === pathName && key !== name) {
         grunt.fatal('The provided path is already in use by the "' +
           key + '" target. Aborting.');
@@ -165,7 +166,7 @@ exports.init = function (grunt) {
     var target = readTarget(name);
     var project = readProject();
 
-    if (grunt.util._.keys(project.targets).length === 1) {
+    if (_.keys(project.targets).length === 1) {
       grunt.fatal('\nThere is only one (1) deployment target remaining in ' +
         'your project.\nCarnaby requires at least one (1) deployment target.' +
         '\nAborting.');
@@ -183,15 +184,11 @@ exports.init = function (grunt) {
     return target;
   };
 
-  var uid = exports.uid = function () {
-    return '_' + Date.now();
-  };
-
   exports.utid = function (task) {
     if (!task) {
-      grunt.fatal('We need a task to make a task uid.');
+      grunt.fatal('We need a task name to make a task uid.');
     }
-    var id = [task, task + uid()];
+    var id = [task, _.uniqueId(task)];
     return {
       property: id.join('.'),
       task: id.join(':')

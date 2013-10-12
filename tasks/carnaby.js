@@ -13,6 +13,7 @@ var fs = require('fs');
 module.exports = function (grunt) {
   var helpers = require('./lib/helpers').init(grunt);
   var handlebarsOptions = require('./lib/handlebars-options').init(grunt);
+  var _ = grunt.util._;
 
   var mountFolder = function (connect, dir) {
     return connect.static(path.resolve(dir));
@@ -22,8 +23,8 @@ module.exports = function (grunt) {
     grunt.log.writeflags(templatelist);
     grunt.log.writeln(basepath);
     grunt.log.writeflags(options);
-    return grunt.util._.map(templatelist, function (args) {
-      return grunt.util._.extend({
+    return _.map(templatelist, function (args) {
+      return _.extend({
         template: args[0],
         filepath: path.join(basepath, args[1])
       }, options);
@@ -90,7 +91,7 @@ module.exports = function (grunt) {
 
     // then for each target ...
     var targets = helpers.readProject().targets;
-    grunt.util._.each(targets, function (target, targetName) {
+    _.each(targets, function (target, targetName) {
       files[path.join(dest, targetName + '.json')] = [
         '<%= carnaby.appDir %>/core/config/base.json',
         path.join('<%= carnaby.appDir %>', client.name, 'config/base.json'),
@@ -206,7 +207,7 @@ module.exports = function (grunt) {
 
   var processTemplate = function (options) {
 
-    var before = options.before || grunt.util._.identity;
+    var before = options.before || _.identity;
     var base = options.base || helpers.appDir;
     var dest = path.join(base, options.filepath);
     var extname = path.extname(options.filepath);
@@ -216,7 +217,7 @@ module.exports = function (grunt) {
     var filepathnoext = path.join(dirname, filenamenoext);
     var template = before(helpers.readTemplate(options.template));
 
-    var context = grunt.util._.extend(options.context || {}, {
+    var context = _.extend(options.context || {}, {
       filename: filename,
       extname: extname,
       dirname: dirname,
@@ -239,8 +240,8 @@ module.exports = function (grunt) {
       grunt.fatal('');
     }
     var options = {
-      filepath: path.normalize(grunt.util._.last(args)),
-      template: grunt.util._.first(args),
+      filepath: path.normalize(_.last(args)),
+      template: _.first(args),
       force: task.flags.force
     };
     return options;
@@ -306,7 +307,7 @@ module.exports = function (grunt) {
     }
     var target = helpers.createTarget(name, pathName, desc, force);
 
-    // change this to use grunt.util._.keys(clients) instead...
+    // change this to use _.keys(clients) instead...
     var clients = helpers.readProject().clients;
     var templateList = [['requiretarget', path.join('config', name + '.json')]];
     var templateOptions = {
@@ -314,16 +315,16 @@ module.exports = function (grunt) {
       force: force
     };
     var coreTemplates = makeTemplateOptionsList(templateList, 'core', templateOptions);
-    var templates = grunt.util._.reduce(clients, function (templates, client, key) {
+    var templates = _.reduce(clients, function (templates, client, key) {
       return templates.concat(makeTemplateOptionsList(templateList, key, templateOptions));
     }, coreTemplates);
 
-    grunt.util._.each(templates, processTemplate);
+    _.each(templates, processTemplate);
     grunt.verbose.writeflags(target, 'new target created');
 
     // then we need to update some of the clients tasks... and since there is
     // no other way to do it yet, I'm just updating the whole lot again.
-    grunt.util._.each(clients, updateTasks);
+    _.each(clients, updateTasks);
     var tasks = [
       helpers.run('update-config')
     ].concat(
@@ -353,7 +354,7 @@ module.exports = function (grunt) {
     var clients = helpers.readProject().clients;
 
     // each config from each client
-    var files = grunt.util._.map(clients, function (client) {
+    var files = _.map(clients, function (client) {
       return path.join(client.root, 'config', target.name + '.json');
     });
 
@@ -377,7 +378,7 @@ module.exports = function (grunt) {
     // It is fine to do this here before running the task, because the config
     // file is updated by helpers.deleteTarget, which means that it will be
     // updated by the time when updateTasks runs.
-    grunt.util._.each(clients, updateTasks);
+    _.each(clients, updateTasks);
 
     var tasks = [
       clean.task,
@@ -532,9 +533,9 @@ module.exports = function (grunt) {
     var clients = project.clients;
 
     // Iterate over tasks first
-    grunt.util._.each(tasks, function (clients, task) {
+    _.each(tasks, function (clients, task) {
       grunt.verbose.writeflags(clients, task);
-      grunt.util._.each(clients, function (config, client) {
+      _.each(clients, function (config, client) {
         var target = task + '.' + client;
         grunt.verbose.writeflags(config, client);
         grunt.config(target, config);
@@ -543,7 +544,7 @@ module.exports = function (grunt) {
     });
 
     // Then iterate over clients and add the remaining task specific bits
-    grunt.util._.each(clients, function (client) {
+    _.each(clients, function (client) {
       // manually set the handlebars options for each client, b/c
       // handlebars options are generated with a function, which can't be
       // saved in the project.json file
@@ -721,11 +722,11 @@ module.exports = function (grunt) {
       }
     );
 
-    grunt.util._.each(templates, processTemplate);
+    _.each(templates, processTemplate);
 
     // Once the client files are ready, add a blank configuration file
     // for each target.
-    grunt.util._.each(helpers.readProject().targets, function (target) {
+    _.each(helpers.readProject().targets, function (target) {
       processTemplate({
         context: {target: target.name},
         template: 'requiretarget',
@@ -779,7 +780,7 @@ module.exports = function (grunt) {
         force: force
       }
     );
-    grunt.util._.each(templates, processTemplate);
+    _.each(templates, processTemplate);
 
     // Run all other tasks that depend on a well defined project
     // to work properly.
