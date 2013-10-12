@@ -33,7 +33,7 @@ function compare(filename, test) {
   var expectedFilepath = path.join('test', 'expected', filename);
   var actual = read(actualFilepath);
   var expected = read(expectedFilepath);
-  var msg = 'Text files should be equal.\nActual: "' + actualFilepath +'".\nExpected: "' + expectedFilepath + '".';
+  var msg = 'Text files must be equal.\nActual: "' + actualFilepath +'".\nExpected: "' + expectedFilepath + '".';
   test.equal(actual, expected, msg);
 }
 

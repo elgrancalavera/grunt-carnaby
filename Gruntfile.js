@@ -115,12 +115,6 @@ module.exports = function(grunt) {
     'carnaby:template:appcontroller:app-controller.js',
     'carnaby:template:index:index.html',
     'carnaby:template:html:html.html',
-    'carnaby:init-template:amd:amd-init-template.js',
-    'carnaby:init-template:mainapp:main-app-init.js',
-    'carnaby:init-template:app:app-init.js',
-    'carnaby:init-template:appcontroller:app-controller-init.js',
-    'carnaby:init-template:index:index-init.html',
-    'carnaby:init-template:html:html-init.html',
   ]);
 
   var workflow =  [

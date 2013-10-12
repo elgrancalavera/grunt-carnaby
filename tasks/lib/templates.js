@@ -16,7 +16,7 @@
 
 //----------------------------------
 //
-// JSON
+// JSON (config templates)
 //
 //----------------------------------
 
@@ -69,7 +69,6 @@ exports.amd = [
   'js/footer-amd.js',
   'js/footer.js'
 ];
-
 
 // Just because I like this alias :)
 exports.sugar = exports.amd;

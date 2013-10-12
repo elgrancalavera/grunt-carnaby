@@ -670,20 +670,6 @@ module.exports = function (grunt) {
   });
 
   /*
-   * carnaby:init-template carnaby template for grunt-init-carnaby
-   *  ti templates don't replace any template tokens, just change their syntax
-   *  and leaves them in place to be used developing grunt-init-carnaby
-   */
-  grunt.registerTask('carnaby:init-template', '(deprecated).', function () {
-    var options = getTemplateOptions(this);
-    options.before = function (template) {
-      return template.replace(/<%/g, '{%').replace(/%>/g, '%}');
-    };
-    processTemplate(options);
-    grunt.log.ok();
-  });
-
-  /*
    * carnaby:new-client[:client] generates a carnaby client application
    * defaults to carnaby:new-client:mobile
    */
