@@ -1058,7 +1058,7 @@ module.exports = function (grunt) {
 
         //----------------------------------
         //
-        // loose ends: plugins.js, handlebars.js, require.js
+        // loose ends: modernizr.js, plugins.js, handlebars.js, require.js
         //
         //----------------------------------
         {
@@ -1066,6 +1066,7 @@ module.exports = function (grunt) {
           cwd: bowerdir,
           dest: path.join(target.path, client.name, 'bower_components'),
           src: [
+            'modernizr/modernizr.js',
             'html5-boilerplate/js/plugins.js',
             'handlebars/handlebars.js',
             'requirejs/require.js'
