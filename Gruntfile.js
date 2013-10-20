@@ -1,8 +1,8 @@
 /*global module:false*/
 /*
  * grunt-carnaby
- * ./Gruntfile.js
- * https://github.com/leon.coto/grunt-carnaby
+ * Gruntfile.js
+ * https://github.com/elgrancalavera/grunt-carnaby
  *
  * Copyright (c) 2013 M&C Saatchi
  * Licensed under the MIT license.
@@ -17,7 +17,6 @@ var mountFolder = function (connect, dir) {
 };
 
 module.exports = function(grunt) {
-
   grunt.initConfig({
     carnaby: {
       appDir: 'app',
@@ -68,7 +67,7 @@ module.exports = function(grunt) {
         },
         files: [
           '<%= carnaby.appDir %>/**/*.html',
-          '.carnaby/tmp/*/scripts/templates.js'
+          '<%= carnaby.tmpDir %>/*/scripts/templates.js'
         ]
       },
       updateConfig: {
@@ -76,7 +75,10 @@ module.exports = function(grunt) {
         tasks: ['carnaby:update-config']
       },
       project: {
-        files: '<%= jshint.project %>',
+        files: [
+          '<%= jshint.project.src %>',
+          '!**/templates/**/*.js',
+        ],
         tasks: ['jshint:project']
       },
     },
@@ -84,12 +86,18 @@ module.exports = function(grunt) {
       options: {
         jshintrc: '.jshintrc',
       },
-      project: [
-        'Gruntfile.js',
-        '<%= carnaby.appDir %>/core/common/scripts/**/*.js',
-        'tasks/**/*.js',
-        '!**/templates/**/*',
-      ],
+      project: {
+        options: {
+          ignores: [
+            '**/templates/**/*.js'
+          ]
+        },
+        src: [
+          'Gruntfile.js',
+          '<%= carnaby.appDir %>/**/scripts/**/*.js',
+          'tasks/**/*.js'
+        ]
+      },
       artifacts: [
         '<%= carnaby.appDir %>/**/*.{js,json}'
       ]
