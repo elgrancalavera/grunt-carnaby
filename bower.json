@@ -1,4 +1,5 @@
 {
+  "name": "grunt-carnaby",
   "license": "MIT",
   "ignore": [
     "**/.*",
