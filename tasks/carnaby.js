@@ -119,13 +119,14 @@ module.exports = function (grunt) {
     helpers.ensureTask(project, 'compass');
     project.tasks.compass[client.name] = {
       options: {
-        sassDir: path.join(srcbase, 'styles'),
-        cssDir: path.join(dstbase, 'styles'),
-        imagesDir: path.join(srcbase, 'images'),
-        fontsDir: path.join(commonbase, 'fonts'),
-        javascriptsDir: path.join(srcbase, 'scripts'),
+        basePath: srcbase,
+        sassDir: 'styles',
+        cssDir: 'css',
+        imagesDir: 'images',
+        generatedImagesDir: 'images/generated',
+        fontsDir: 'fonts',
+        javascriptsDir: 'scripts',
         importPath: commonbase,
-        generatedImagesDir: path.join(dstbase, 'images'),
         relativeAssets: true
       }
     };
@@ -772,8 +773,18 @@ module.exports = function (grunt) {
     // `grunt.config()`
     updateTasks(client);
 
+    // Copy any files from the task directory to the client directory
+    var copy = helpers.utid('copy');
+    grunt.config(copy.property, {
+      expand: true,
+      cwd: path.join(__dirname, 'assets'),
+      dest: client.root,
+      src: [ 'images/**/*.{png,jpg,jpeg,gif}']
+    });
+
     // Update all artifacts for this client
     grunt.task.run(helpers.checkForce([
+      copy.task,
       helpers.run('update-client', name),
       helpers.run('update-index')
     ], force));
@@ -1034,18 +1045,19 @@ module.exports = function (grunt) {
         //----------------------------------
         //
         // .carnaby/tmp/client > to target/client
+        // app/client/ > target/client/
         //
         //----------------------------------
         {
           expand: true,
-          cwd: path.join(helpers.tmpDir, client.name),
+          cwd: path.join(appdir, client.name),
           dest: path.join(target.path, client.name),
-          src: [ 'styles/**/*.css' ]
+          src: [ 'css/**/*.css', 'images/**/*.{jpg,png,gif,jpeg}' ]
         },
 
         //----------------------------------
         //
-        // app/client/ > target/client
+        // app/client/ > target/client (top level files)
         //
         //----------------------------------
         {

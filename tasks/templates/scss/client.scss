@@ -1,1 +1,19 @@
 @import "common";
+
+// Images are configured correctly
+@import "compass/typography/text/replacement";
+h1 {
+  @include replace-text-with-dimensions("carnaby.png");
+}
+
+// Generated images are configured correctly
+@import "icons/*.png";
+.sprite {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  @include icons-sprite(square-one);
+  &:hover {
+    @include icons-sprite(square-two);
+  }
+}

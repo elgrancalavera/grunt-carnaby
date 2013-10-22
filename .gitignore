@@ -8,5 +8,7 @@ local.json
 node_modules
 targets
 tmp
+css
+images/generated
 .carnaby
 app
